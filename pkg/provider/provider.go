@@ -5,17 +5,18 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"os"
+
 	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/IvanOfThings/terraform-provider-clickhouse/pkg/common"
-	"github.com/IvanOfThings/terraform-provider-clickhouse/pkg/datasources"
-	"github.com/IvanOfThings/terraform-provider-clickhouse/pkg/resources/db"
-	"github.com/IvanOfThings/terraform-provider-clickhouse/pkg/resources/role"
-	"github.com/IvanOfThings/terraform-provider-clickhouse/pkg/resources/table"
-	"github.com/IvanOfThings/terraform-provider-clickhouse/pkg/resources/user"
+	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
+	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/datasources"
+	resourcedb "github.com/Triple-Whale/terraform-provider-clickhouse/pkg/resources/db"
+	resourcerole "github.com/Triple-Whale/terraform-provider-clickhouse/pkg/resources/role"
+	resourcetable "github.com/Triple-Whale/terraform-provider-clickhouse/pkg/resources/table"
+	resourceuser "github.com/Triple-Whale/terraform-provider-clickhouse/pkg/resources/user"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/joho/godotenv"
-	"os"
 )
 
 func init() {

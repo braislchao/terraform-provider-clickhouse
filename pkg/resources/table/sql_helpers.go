@@ -2,8 +2,9 @@ package resourcetable
 
 import (
 	"fmt"
-	"github.com/IvanOfThings/terraform-provider-clickhouse/pkg/common"
 	"strings"
+
+	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
 )
 
 func buildColumnsSentence(cols []ColumnResource) []string {

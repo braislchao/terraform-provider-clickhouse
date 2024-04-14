@@ -3,8 +3,9 @@ package resourcedb
 import (
 	"context"
 	"fmt"
+
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	"github.com/IvanOfThings/terraform-provider-clickhouse/pkg/resources/table"
+	resourcetable "github.com/IvanOfThings/terraform-provider-clickhouse/pkg/resources/table"
 )
 
 type CHDBService struct {

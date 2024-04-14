@@ -2,9 +2,10 @@ package resourcetable
 
 import (
 	"fmt"
-	"github.com/IvanOfThings/terraform-provider-clickhouse/pkg/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"regexp"
+
+	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
 type CHTable struct {

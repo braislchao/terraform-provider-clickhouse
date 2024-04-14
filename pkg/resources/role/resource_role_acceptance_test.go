@@ -3,14 +3,15 @@ package resourcerole_test
 import (
 	"context"
 	"fmt"
-	"github.com/IvanOfThings/terraform-provider-clickhouse/pkg/common"
-	"github.com/IvanOfThings/terraform-provider-clickhouse/pkg/resources/role"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"regexp"
 	"strings"
 	"testing"
 
-	"github.com/IvanOfThings/terraform-provider-clickhouse/pkg/testutils"
+	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
+	resourcerole "github.com/Triple-Whale/terraform-provider-clickhouse/pkg/resources/role"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/testutils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 

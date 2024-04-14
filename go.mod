@@ -1,8 +1,8 @@
-module github.com/IvanOfThings/terraform-provider-clickhouse
+module github.com/Triple-Whale/terraform-provider-clickhouse
 
 go 1.19
 
-replace github.com/hashicorp/terraform-provider-scaffolding => github.com/IvanOfThings/terraform-provider-clickhouse v0.1.0
+replace github.com/hashicorp/terraform-provider-scaffolding => github.com/Triple-Whale/terraform-provider-clickhouse v0.1.0
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.15.0
