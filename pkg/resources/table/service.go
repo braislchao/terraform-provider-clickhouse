@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
+	"github.com/Triple-Whale/terraform-provider-clickhouse/v4/pkg/common"
 )
 
 type CHTableService struct {

@@ -7,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
-	resourceuser "github.com/Triple-Whale/terraform-provider-clickhouse/pkg/resources/user"
+	"github.com/Triple-Whale/terraform-provider-clickhouse/v4/pkg/common"
+	resourceuser "github.com/Triple-Whale/terraform-provider-clickhouse/v4/pkg/resources/user"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/testutils"
+	"github.com/Triple-Whale/terraform-provider-clickhouse/v4/pkg/testutils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 

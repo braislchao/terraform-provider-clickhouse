@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/provider"
+	"github.com/Triple-Whale/terraform-provider-clickhouse/v4/v4/pkg/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 )
 
