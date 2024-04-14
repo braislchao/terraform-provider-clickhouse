@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	resourcetable "github.com/IvanOfThings/terraform-provider-clickhouse/pkg/resources/table"
+	resourcetable "github.com/Triple-Whale/terraform-provider-clickhouse/v4/pkg/resources/table"
 )
 
 type CHDBService struct {
