@@ -1,4 +1,4 @@
-module github.com/Triple-Whale/terraform-provider-clickhouse/v4
+module github.com/Triple-Whale/terraform-provider-clickhouse
 
 go 1.19
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Triple-Whale/terraform-provider-clickhouse/v4/pkg/common"
+	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )

@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	resourcetable "github.com/Triple-Whale/terraform-provider-clickhouse/v4/pkg/resources/table"
+	resourcetable "github.com/Triple-Whale/terraform-provider-clickhouse/pkg/resources/table"
 
-	"github.com/Triple-Whale/terraform-provider-clickhouse/v4/pkg/common"
+	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
