@@ -75,19 +75,19 @@ var test1StepsData = []TestStepData{
 		// Check all allowed privileges
 		roleName:   roleName1,
 		database:   databaseName1,
-		privileges: resourcerole.AllowedPrivileges,
+		privileges: resourcerole.AllowedDbLevelPrivileges,
 	},
 	{
 		// Change role name
 		roleName:   roleName2,
 		database:   databaseName1,
-		privileges: resourcerole.AllowedPrivileges,
+		privileges: resourcerole.AllowedDbLevelPrivileges,
 	},
 	{
 		// Change role name and db
 		roleName:   roleName1,
 		database:   databaseName2,
-		privileges: resourcerole.AllowedPrivileges,
+		privileges: resourcerole.AllowedDbLevelPrivileges,
 	},
 	{
 		// Change role name, db and privileges
@@ -129,19 +129,25 @@ var test2StepsData = []TestStepData{
 		// Check all allowed privileges
 		roleName:   roleName1,
 		database:   "system",
-		privileges: resourcerole.AllowedPrivileges,
+		privileges: resourcerole.AllowedDbLevelPrivileges,
 	},
 	{
 		// Change role name
 		roleName:   roleName2,
 		database:   "system",
-		privileges: resourcerole.AllowedPrivileges,
+		privileges: resourcerole.AllowedDbLevelPrivileges,
 	},
 }
 
 func generateTestSteps(testStepsData []TestStepData) []resource.TestStep {
 	var testSteps []resource.TestStep
 	for _, testStepData := range testStepsData {
+		var databaseRegex *regexp.Regexp
+		if testStepData.database == "*" {
+			databaseRegex = regexp.MustCompile("\\*")
+		} else {
+			databaseRegex = regexp.MustCompile(testStepData.database)
+		}
 		testSteps = append(testSteps, resource.TestStep{
 			Config: testAccRoleResource(
 				testStepData.roleName,
@@ -157,7 +163,7 @@ func generateTestSteps(testStepsData []TestStepData) []resource.TestStep {
 				resource.TestMatchResourceAttr(
 					roleResource,
 					"database",
-					regexp.MustCompile(testStepData.database),
+					databaseRegex,
 				),
 				testutils.CheckStateSetAttr("privileges", roleResource, testStepData.privileges),
 				testAccCheckRoleResourceExists(testStepData.roleName, testStepData.database, testStepData.privileges),
@@ -181,6 +187,20 @@ func TestAccResourceRole(t *testing.T) {
 		CheckDestroy: testAccCheckRoleResourceDestroy([]string{roleName1, roleName2}),
 		Steps:        generateTestSteps(test2StepsData),
 	})
+	// Feature tests, global privileges
+	resource.Test(t, resource.TestCase{
+		Providers:    testutils.Provider(),
+		CheckDestroy: testAccCheckRoleResourceDestroy([]string{roleName1, roleName2}),
+		Steps: generateTestSteps([]TestStepData{
+			{
+				// Create role
+				roleName: roleName1,
+				database: "*",
+				privileges: []string{
+					"REMOTE",
+				},
+			}}),
+	})
 	// Validate privileges on create
 	resource.Test(t, resource.TestCase{
 		Providers: testutils.Provider(),
@@ -192,6 +212,19 @@ func TestAccResourceRole(t *testing.T) {
 					common.Quote([]string{"NOT_ALLOWED_PRIVILEGE"}),
 				),
 				ExpectError: regexp.MustCompile("NOT_ALLOWED_PRIVILEGE isn't in the allowed privileges list"),
+			},
+		},
+	})
+	resource.Test(t, resource.TestCase{
+		Providers: testutils.Provider(),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleResource(
+					roleName1,
+					databaseName1,
+					common.Quote([]string{"REMOTE"}),
+				),
+				ExpectError: regexp.MustCompile("Global privilege REMOTE is only allowed for database '\\*'"),
 			},
 		},
 	})
@@ -225,6 +258,15 @@ func testAccRoleResource(roleName string, database string, privileges []string) 
 	resource "clickhouse_role" "test_role" {
 		name = "%s"
 		database = "system"
+		privileges = [%s]
+	}`, roleName, strings.Join(privileges, ","))
+	}
+
+	if database == "*" {
+		return fmt.Sprintf(`
+	resource "clickhouse_role" "test_role" {
+		name = "%s"
+		database = "*"
 		privileges = [%s]
 	}`, roleName, strings.Join(privileges, ","))
 	}
