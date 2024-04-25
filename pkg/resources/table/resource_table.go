@@ -183,7 +183,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	tableResource.SetPartitionBy(d.Get("partition_by").([]interface{}))
 
 	if tableResource.Cluster == "" {
-		tableResource.Cluster = client.DefaultCluster // bug
+		tableResource.Cluster = client.DefaultCluster
 	}
 
 	tableResource.Validate(diags)
