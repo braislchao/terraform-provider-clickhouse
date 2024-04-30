@@ -4,7 +4,7 @@ NAMESPACE=ivanofthings
 NAME=clickhouse
 BINARY=terraform-provider-${NAME}
 VERSION=2.0.0
-OS_ARCH=linux_amd64
+OS_ARCH=darwin_arm64
 
 default: testacc
 

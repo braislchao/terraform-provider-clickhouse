@@ -8,7 +8,10 @@ terraform {
 }
 
 provider "clickhouse" {
-  port = 8123
+  port = 9000
+  host           = "stg.sonic-cluster.internal.whaledb.io"
+  username       = "sonic"
+  password       = ""
 }
 
 resource "clickhouse_db" "test_db_clustered" {
@@ -19,50 +22,30 @@ resource "clickhouse_db" "test_db_clustered" {
 
 
 resource "clickhouse_table" "replicated_table" {
-  database      = clickhouse_db.test_db_clustered.name
-  name          = "replicated_table"
-  cluster       = "'{cluster}'"
-  engine        = "ReplicatedMergeTree"
-  engine_params = ["'/clickhouse/{installation}/{cluster}/tables/{shard}/{database}/{table}'", "'{replica}'"]
-  order_by      = ["event_date", "event_type"]
-  columns {
+  database      = "default"
+  name          = "kafka_test"
+  engine        = "Kafka"
+  engine_params  = ["'sonic-cluster-kafka-bootstrap.internal.sonicwhale.io:9092'", "'test'", "'test'", "'JSONEachRows'"]
+  column {
     name = "event_date"
     type = "Date"
   }
-  columns {
+  column {
     name = "event_type"
     type = "Int32"
   }
-  columns {
+  column {
     name = "article_id"
     type = "Int32"
   }
-  columns {
+  column {
     name = "title"
     type = "String"
   }
-  partition_by {
-    by = "event_type"
+  
+  settings = {
+    kafka_thread_per_consumer = "1"
+    kafka_num_consumers = "8"
   }
-  partition_by {
-    by                 = "event_date"
-    partition_function = "toYYYYMM"
-  }
+  
 }
-
-
-resource "clickhouse_table" "distributed_table" {
-  database = clickhouse_db.test_db_clustered.name
-  name     = "distributed_table"
-  cluster  = "'{cluster}'"
-  engine   = "Distributed"
-  engine_params = [
-    "'{cluster}'",
-    clickhouse_db.test_db_clustered.name,
-    clickhouse_table.replicated_table.name,
-  "rand()"]
-}
-
-
-
-
