@@ -9,15 +9,9 @@ terraform {
 
 provider "clickhouse" {
   port = 9000
-  host           = "stg.sonic-cluster.internal.whaledb.io"
+  host           = "10.216.0.3"
   username       = "sonic"
   password       = ""
-}
-
-resource "clickhouse_db" "test_db_clustered" {
-  name    = "awesome_database"
-  comment = "This is an awesome database"
-  cluster = "'{cluster}'"
 }
 
 
