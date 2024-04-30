@@ -35,6 +35,7 @@ type TableResource struct {
 	OrderBy      []string
 	Columns      []interface{}
 	PartitionBy  []PartitionByResource
+	Settings     map[string]string
 }
 
 type ColumnResource struct {
@@ -69,7 +70,7 @@ func (t *CHTable) ToResource() (*TableResource, error) {
 		Columns:    t.ColumnsToResource(),
 	}
 
-	r, _ := regexp.Compile("MergeTree\\((?P<engine_params>[^)]*)\\)")
+	r, _ := regexp.Compile("[a-zA-Z]*\\((?P<engine_params>[^)]*)\\)")
 	matches := r.FindStringSubmatch(t.EngineFull)
 	engineParamsIndex := r.SubexpIndex("engine_params")
 	engineParams := make([]string, 0)

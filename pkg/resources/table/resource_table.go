@@ -115,6 +115,15 @@ func ResourceTable() *schema.Resource {
 					},
 				},
 			},
+			"settings": {
+				Description: "Table settings",
+				Type:        schema.TypeMap,
+				Optional:    true,
+				ForceNew:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -181,6 +190,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	tableResource.EngineParams = common.MapArrayInterfaceToArrayOfStrings(d.Get("engine_params").([]interface{}))
 	tableResource.OrderBy = common.MapArrayInterfaceToArrayOfStrings(d.Get("order_by").([]interface{}))
 	tableResource.SetPartitionBy(d.Get("partition_by").([]interface{}))
+	tableResource.Settings = common.MapInterfaceToMapOfString(d.Get("settings").(map[string]interface{}))
 
 	if tableResource.Cluster == "" {
 		tableResource.Cluster = client.DefaultCluster

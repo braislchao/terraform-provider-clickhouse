@@ -32,7 +32,19 @@ func buildPartitionBySentence(partitionBy []PartitionByResource) string {
 
 func buildOrderBySentence(orderBy []string) string {
 	if len(orderBy) > 0 {
-		return fmt.Sprintf("ORDER BY %v", strings.Join(orderBy, ", "))
+		return fmt.Sprintf("ORDER BY (%v)", strings.Join(orderBy, ", "))
+	}
+	return ""
+}
+
+func buildSettingsSentence(settings map[string]string) string {
+	if len(settings) > 0 {
+		settingsList := make([]string, 0)
+		for key, value := range settings {
+			settingsList = append(settingsList, fmt.Sprintf("%s = %s", key, value))
+		}
+		ret := fmt.Sprintf("SETTINGS %s", strings.Join(settingsList, ", "))
+		return ret
 	}
 	return ""
 }
@@ -46,8 +58,8 @@ func buildCreateOnClusterSentence(resource TableResource) (query string) {
 
 	clusterStatement := common.GetClusterStatement(resource.Cluster)
 
-	return fmt.Sprintf(
-		"CREATE TABLE %v.%v %v %v ENGINE = %v(%v) %s %s COMMENT '%s'",
+	ret := fmt.Sprintf(
+		"CREATE TABLE %v.%v %v %v ENGINE = %v(%v) %s %s %s COMMENT '%s'",
 		resource.Database,
 		resource.Name,
 		clusterStatement,
@@ -56,6 +68,8 @@ func buildCreateOnClusterSentence(resource TableResource) (query string) {
 		strings.Join(resource.EngineParams, ", "),
 		buildOrderBySentence(resource.OrderBy),
 		buildPartitionBySentence(resource.PartitionBy),
+		buildSettingsSentence(resource.Settings),
 		resource.Comment,
 	)
+	return ret
 }

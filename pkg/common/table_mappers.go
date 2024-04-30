@@ -7,3 +7,11 @@ func MapArrayInterfaceToArrayOfStrings(in []interface{}) []string {
 	}
 	return ret
 }
+
+func MapInterfaceToMapOfString(in map[string]interface{}) map[string]string {
+	ret := make(map[string]string)
+	for key, value := range in {
+		ret[key] = value.(string)
+	}
+	return ret
+}
