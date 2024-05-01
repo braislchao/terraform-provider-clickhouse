@@ -41,7 +41,7 @@ func buildSettingsSentence(settings map[string]string) string {
 	if len(settings) > 0 {
 		settingsList := make([]string, 0)
 		for key, value := range settings {
-			settingsList = append(settingsList, fmt.Sprintf("%s = %s", key, value))
+			settingsList = append(settingsList, fmt.Sprintf("%s = '%s'", key, value))
 		}
 		ret := fmt.Sprintf("SETTINGS %s", strings.Join(settingsList, ", "))
 		return ret

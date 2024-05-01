@@ -9,11 +9,11 @@ terraform {
 
 provider "clickhouse" {
   port = 9000
-  host           = "10.216.0.3"
+  host           = "10.46.0.247"
   username       = "sonic"
-  password       = "QfLiDQpA0X9jiw3V"
+  password       = ""
 }
-/*
+
 
 resource "clickhouse_table" "replicated_table" {
   database      = "default"
@@ -38,12 +38,12 @@ resource "clickhouse_table" "replicated_table" {
   }
   
   settings = {
-    kafka_thread_per_consumer = "1"
-    kafka_num_consumers = "8"
+    kafka_thread_per_consumer = 1
+    kafka_num_consumers = 8
   }
   
 }
-*/
+
 /*
 resource "clickhouse_table" "t2" {
   database      = "default"
@@ -76,9 +76,8 @@ resource "clickhouse_view" "test_view" {
   database      = "default"
   name          = "test_view"
   cluster="main"
-query = "select * from nx_refunds limit 10"
+query = "select * from default.nx_refunds limit 10"
 }
-*/
 
 resource "clickhouse_view" "test_materialized_view" {
   database      = "default"
@@ -89,3 +88,4 @@ resource "clickhouse_view" "test_materialized_view" {
 query = "select * from default.nx_refunds limit 10"
 }
 
+*/
