@@ -86,6 +86,6 @@ resource "clickhouse_view" "test_materialized_view" {
   materialized = true
   to_table = "test_view"
   cluster="main"
-query = "select * from nx_refunds limit 10"
+query = "select * from default.nx_refunds limit 10"
 }
 

@@ -1,6 +1,10 @@
 package resourceview
 
 import (
+	"fmt"
+	"regexp"
+	"strings"
+
 	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
@@ -43,6 +47,22 @@ func (t *CHView) ToResource() (*ViewResource, error) {
 	return &viewResource, nil
 }
 
-func (t *ViewResource) Validate(diags diag.Diagnostics) {
-	// TODO
+func (t *ViewResource) Validate() diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	re := regexp.MustCompile(`(?i)FROM\s+([a-zA-Z0-9_\-\.]+)`)
+
+	matches := re.FindAllStringSubmatch(t.Query, -1)
+
+	for _, match := range matches {
+		if !strings.Contains(match[1], ".") {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "invalid value",
+				Detail:   fmt.Sprintf("query table %s must be in database.table format", match[1]),
+			})
+		}
+	}
+
+	return diags
 }
