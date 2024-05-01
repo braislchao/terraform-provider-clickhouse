@@ -70,3 +70,11 @@ resource "clickhouse_table" "t2" {
   order_by = ["event_date"]
 }
 */
+
+
+resource "clickhouse_view" "test_view" {
+  database      = "default"
+  name          = "test_view"
+  cluster="main"
+query = "select * from nx_refunds limit 10"
+}

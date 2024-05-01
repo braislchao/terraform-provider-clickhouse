@@ -14,6 +14,7 @@ import (
 	resourcerole "github.com/Triple-Whale/terraform-provider-clickhouse/pkg/resources/role"
 	resourcetable "github.com/Triple-Whale/terraform-provider-clickhouse/pkg/resources/table"
 	resourceuser "github.com/Triple-Whale/terraform-provider-clickhouse/pkg/resources/user"
+	resourceview "github.com/Triple-Whale/terraform-provider-clickhouse/pkg/resources/view"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/joho/godotenv"
@@ -95,6 +96,7 @@ func New(version string) func() *schema.Provider {
 			ResourcesMap: map[string]*schema.Resource{
 				"clickhouse_db":    resourcedb.ResourceDb(),
 				"clickhouse_table": resourcetable.ResourceTable(),
+				"clickhouse_view":  resourceview.ResourceView(),
 				"clickhouse_role":  resourcerole.ResourceRole(),
 				"clickhouse_user":  resourceuser.ResourceUser(),
 			},
