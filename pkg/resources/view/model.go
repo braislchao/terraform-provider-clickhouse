@@ -8,7 +8,7 @@ import (
 type CHView struct {
 	Database string `ch:"database"`
 	Name     string `ch:"name"`
-	Query    string `ch:"query"`
+	Query    string `ch:"as_select"`
 	Comment  string `ch:"comment"`
 }
 
