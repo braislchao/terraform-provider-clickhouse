@@ -1,8 +1,10 @@
 # TW
+```
 <repo base> make install
 <example dir> rm .terraform.lock.hcl
 <example dir> terraform init
 <example dir> terraform apply
+```
 
 # Terraform Provider: Clickhouse (Terraform Plugin SDK)
 
