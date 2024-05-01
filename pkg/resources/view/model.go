@@ -9,15 +9,18 @@ type CHView struct {
 	Database string `ch:"database"`
 	Name     string `ch:"name"`
 	Query    string `ch:"as_select"`
+	Engine   string `ch:"engine"`
 	Comment  string `ch:"comment"`
 }
 
 type ViewResource struct {
-	Database string
-	Name     string
-	Query    string
-	Cluster  string
-	Comment  string
+	Database     string
+	Name         string
+	Query        string
+	Cluster      string
+	Materialized bool
+	ToTable      string
+	Comment      string
 }
 
 func (t *CHView) ToResource() (*ViewResource, error) {
@@ -27,13 +30,15 @@ func (t *CHView) ToResource() (*ViewResource, error) {
 		Query:    t.Query,
 	}
 
-	comment, cluster, err := common.UnmarshalComment(t.Comment)
+	comment, cluster, toTable, err := common.UnmarshalComment(t.Comment)
 	if err != nil {
 		return nil, err
 	}
 
 	viewResource.Cluster = cluster
 	viewResource.Comment = comment
+	viewResource.ToTable = toTable
+	viewResource.Materialized = t.Engine == "MaterializedView"
 
 	return &viewResource, nil
 }

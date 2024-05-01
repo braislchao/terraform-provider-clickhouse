@@ -47,6 +47,19 @@ func ResourceView() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
+			"materialized": {
+				Description: "Is materialized view",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+			},
+			"to_table": {
+				Description: "For materialized view - destination table",
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+			},
 		},
 	}
 }
@@ -85,6 +98,12 @@ func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	if err := d.Set("query", viewResource.Query); err != nil {
 		return diag.FromErr(fmt.Errorf("setting cluster: %v", err))
 	}
+	if err := d.Set("materialized", viewResource.Materialized); err != nil {
+		return diag.FromErr(fmt.Errorf("setting materialized: %v", err))
+	}
+	if err := d.Set("to_table", viewResource.ToTable); err != nil {
+		return diag.FromErr(fmt.Errorf("setting to_table: %v", err))
+	}
 
 	d.SetId(viewResource.Cluster + ":" + database + ":" + viewName)
 
@@ -103,7 +122,9 @@ func resourceViewCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	viewResource.Database = d.Get("database").(string)
 	viewResource.Name = d.Get("name").(string)
 	viewResource.Query = d.Get("query").(string)
-	viewResource.Comment = common.GetComment(d.Get("comment").(string), viewResource.Cluster)
+	viewResource.Materialized = d.Get("materialized").(bool)
+	viewResource.ToTable = d.Get("to_table").(string)
+	viewResource.Comment = common.GetComment(d.Get("comment").(string), viewResource.Cluster, &viewResource.ToTable)
 
 	if viewResource.Cluster == "" {
 		viewResource.Cluster = client.DefaultCluster

@@ -83,7 +83,7 @@ func (t *CHTable) ToResource() (*TableResource, error) {
 		}
 	}
 
-	comment, cluster, err := common.UnmarshalComment(t.Comment)
+	comment, cluster, _, err := common.UnmarshalComment(t.Comment)
 	if err != nil {
 		return nil, err
 	}

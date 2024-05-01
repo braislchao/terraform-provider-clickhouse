@@ -8,15 +8,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func GetComment(comment string, cluster string) string {
-	storingComment := fmt.Sprintf(`{"comment":"%v","cluster":"%v"}`, comment, cluster)
+func toTablePhrase(toTable *string) string {
+	if toTable != nil {
+		return fmt.Sprintf(`,"to_table":"%v"`, *toTable)
+	}
+	return ""
+}
+
+func GetComment(comment string, cluster string, toTable *string) string {
+	storingComment := fmt.Sprintf(`{"comment":"%v","cluster":"%v"%s}`, comment, cluster, toTablePhrase(toTable))
 	storingComment = strings.Replace(storingComment, "'", "\\'", -1)
 	return storingComment
 }
 
-func UnmarshalComment(storedComment string) (comment string, cluster string, err error) {
+func UnmarshalComment(storedComment string) (comment string, cluster string, toTable string, err error) {
 	if storedComment == "" {
-		return "", "", nil
+		return "", "", "", nil
 	}
 	storedComment = strings.Replace(storedComment, "\\'", "'", -1)
 
@@ -25,12 +32,14 @@ func UnmarshalComment(storedComment string) (comment string, cluster string, err
 	var dat map[string]interface{}
 
 	if err := json.Unmarshal(byteStreamComment, &dat); err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 	comment = dat["comment"].(string)
 	cluster = dat["cluster"].(string)
+	toTable, ok := dat["to_table"].(string)
+	fmt.Println("ok", ok)
 
-	return comment, cluster, err
+	return comment, cluster, toTable, err
 }
 
 func GetClusterStatement(cluster string) (clusterStatement string) {

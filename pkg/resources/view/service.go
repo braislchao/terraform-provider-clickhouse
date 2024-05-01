@@ -34,7 +34,7 @@ func (ts *CHViewService) GetDBViews(ctx context.Context, database string) ([]CHV
 }
 
 func (ts *CHViewService) GetView(ctx context.Context, database string, view string) (*CHView, error) {
-	query := fmt.Sprintf("SELECT database, name, as_select, comment FROM system.tables where database = '%s' and name = '%s'", database, view)
+	query := fmt.Sprintf("SELECT database, name, engine, as_select, comment FROM system.tables where database = '%s' and name = '%s'", database, view)
 	row := (*ts.CHConnection).QueryRow(ctx, query)
 
 	if row.Err() != nil {

@@ -71,10 +71,21 @@ resource "clickhouse_table" "t2" {
 }
 */
 
-
+/*
 resource "clickhouse_view" "test_view" {
   database      = "default"
   name          = "test_view"
   cluster="main"
 query = "select * from nx_refunds limit 10"
 }
+*/
+
+resource "clickhouse_view" "test_materialized_view" {
+  database      = "default"
+  name          = "test_materialized_view"
+  materialized = true
+  to_table = "test_view"
+  cluster="main"
+query = "select * from nx_refunds limit 10"
+}
+
