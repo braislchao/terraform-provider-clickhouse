@@ -23,6 +23,7 @@ resource "clickhouse_table" "replicated_table" {
   column {
     name = "event_date"
     type = "Date"
+    nullable = true
   }
   column {
     name = "event_type"

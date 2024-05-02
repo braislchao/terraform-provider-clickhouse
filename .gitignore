@@ -23,7 +23,7 @@ website/node_modules
 *.iml
 *.test
 *.iml
-
+pkg/mod
 website/vendor
 
 # Test exclusions

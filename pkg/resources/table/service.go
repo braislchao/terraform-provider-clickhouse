@@ -57,7 +57,7 @@ func (ts *CHTableService) GetTable(ctx context.Context, database string, table s
 
 func (ts *CHTableService) getTableColumns(ctx context.Context, database string, table string) ([]CHColumn, error) {
 	query := fmt.Sprintf(
-		"SELECT database, table, name, type FROM system.columns WHERE database = '%s' AND table = '%s'",
+		"SELECT database, table, name, type, comment FROM system.columns WHERE database = '%s' AND table = '%s'",
 		database,
 		table,
 	)

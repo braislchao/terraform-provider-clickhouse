@@ -10,9 +10,16 @@ import (
 func buildColumnsSentence(cols []ColumnResource) []string {
 	outColumn := make([]string, 0)
 	for _, col := range cols {
-		outColumn = append(outColumn, fmt.Sprintf("\t %s %s", col.Name, col.Type))
+		outColumn = append(outColumn, fmt.Sprintf("\t %s %s", col.Name, getTypeWithNullable(col.Type, col.Nullable)))
 	}
 	return outColumn
+}
+
+func getTypeWithNullable(t string, nullable bool) string {
+	if nullable {
+		return fmt.Sprintf("Nullable(%s)", t)
+	}
+	return t
 }
 
 func buildPartitionBySentence(partitionBy []PartitionByResource) string {

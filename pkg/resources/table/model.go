@@ -3,6 +3,7 @@ package resourcetable
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -22,6 +23,7 @@ type CHColumn struct {
 	Table    string `ch:"table"`
 	Name     string `ch:"name"`
 	Type     string `ch:"type"`
+	Comment  string `ch:"comment"`
 }
 
 type TableResource struct {
@@ -39,8 +41,10 @@ type TableResource struct {
 }
 
 type ColumnResource struct {
-	Name string
-	Type string
+	Name     string
+	Type     string
+	Nullable bool
+	Comment  string
 }
 
 type PartitionByResource struct {
@@ -52,13 +56,26 @@ func (t *CHTable) ColumnsToResource() []interface{} {
 	var columnResources []interface{}
 	for _, column := range t.Columns {
 		columnResource := map[string]interface{}{
-			"name": column.Name,
-			"type": column.Type,
+			"name":     column.Name,
+			"type":     removeNullable(column.Type),
+			"nullable": isNullable(column.Type),
+			"comment":  column.Comment,
 		}
 		columnResources = append(columnResources, columnResource)
 	}
 
 	return columnResources
+}
+
+func removeNullable(columnType string) string {
+	if strings.HasPrefix(columnType, "Nullable(") && strings.HasSuffix(columnType, ")") {
+		return strings.TrimSuffix(strings.TrimPrefix(columnType, "Nullable("), ")")
+	}
+	return columnType
+}
+
+func isNullable(columnType string) bool {
+	return strings.HasPrefix(columnType, "Nullable")
 }
 
 func (t *CHTable) ToResource() (*TableResource, error) {
@@ -99,8 +116,10 @@ func (t *TableResource) GetColumnsResourceList() []ColumnResource {
 	var columnResources []ColumnResource
 	for _, column := range t.Columns {
 		columnResources = append(columnResources, ColumnResource{
-			Name: column.(map[string]interface{})["name"].(string),
-			Type: column.(map[string]interface{})["type"].(string),
+			Name:     column.(map[string]interface{})["name"].(string),
+			Type:     column.(map[string]interface{})["type"].(string),
+			Nullable: column.(map[string]interface{})["nullable"].(bool),
+			Comment:  column.(map[string]interface{})["comment"].(string),
 		})
 	}
 	return columnResources
