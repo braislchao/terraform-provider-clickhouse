@@ -123,7 +123,7 @@ func ResourceTable() *schema.Resource {
 							Description: "Column Comment",
 							Type:        schema.TypeString,
 							Optional:    true,
-							ForceNew:    false,
+							ForceNew:    true,
 						},
 					},
 				},
