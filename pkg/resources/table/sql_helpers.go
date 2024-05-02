@@ -10,9 +10,16 @@ import (
 func buildColumnsSentence(cols []ColumnResource) []string {
 	outColumn := make([]string, 0)
 	for _, col := range cols {
-		outColumn = append(outColumn, fmt.Sprintf("\t %s %s", col.Name, getTypeWithNullable(col.Type, col.Nullable)))
+		outColumn = append(outColumn, fmt.Sprintf("\t %s %s %s", col.Name, getTypeWithNullable(col.Type, col.Nullable), getComment(col.Comment)))
 	}
 	return outColumn
+}
+
+func getComment(comment string) string {
+	if comment != "" {
+		return fmt.Sprintf("COMMENT '%s'", comment)
+	}
+	return ""
 }
 
 func getTypeWithNullable(t string, nullable bool) string {
