@@ -87,16 +87,15 @@ func (t *CHTable) ToResource() (*TableResource, error) {
 		Columns:    t.ColumnsToResource(),
 	}
 
-	r, _ := regexp.Compile("[a-zA-Z]*\\((?P<engine_params>[^)]*)\\)")
-	matches := r.FindStringSubmatch(t.EngineFull)
-	engineParamsIndex := r.SubexpIndex("engine_params")
-	engineParams := make([]string, 0)
-	if engineParamsIndex != -1 {
+	r := regexp.MustCompile(`\(([^)]*)\)`)
 
-		regex := regexp.MustCompile("[, ]+")
-		params := regex.Split(matches[r.SubexpIndex("engine_params")], -1)
-		for _, p := range params {
-			engineParams = append(engineParams, p)
+	match := r.FindStringSubmatch(t.EngineFull)
+	var engineParams []string
+	if len(match) > 1 {
+		values := strings.Split(match[1], ",")
+		for _, value := range values {
+			value = strings.TrimSpace(value)
+			engineParams = append(engineParams, strings.TrimSpace(value))
 		}
 	}
 
