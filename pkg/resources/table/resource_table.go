@@ -177,13 +177,39 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if err := d.Set("cluster", tableResource.Cluster); err != nil {
 		return diag.FromErr(fmt.Errorf("setting cluster: %v", err))
 	}
-	if err := d.Set("column", tableResource.Columns); err != nil {
+	if err := d.Set("column", getColumns(tableResource.Columns)); err != nil {
 		return diag.FromErr(fmt.Errorf("setting column: %v", err))
 	}
 
 	d.SetId(tableResource.Cluster + ":" + database + ":" + tableName)
 
 	return diags
+}
+
+func getColumns(columns []ColumnDefinition) []map[string]interface{} {
+	var ret []map[string]interface{}
+
+	for _, column := range columns {
+		ret = append(ret, map[string]interface{}{
+			"name":     column.Name,
+			"type":     column.Type,
+			"nullable": column.Nullable,
+			"comment":  column.Comment,
+		})
+	}
+	return ret
+}
+
+func (t *TableResource) setColumns(columns []interface{}) {
+	for _, column := range columns {
+		columnDefinition := ColumnDefinition{
+			Name:     column.(map[string]interface{})["name"].(string),
+			Type:     column.(map[string]interface{})["type"].(string),
+			Nullable: column.(map[string]interface{})["nullable"].(bool),
+			Comment:  column.(map[string]interface{})["comment"].(string),
+		}
+		t.Columns = append(t.Columns, columnDefinition)
+	}
 }
 
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -197,7 +223,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	tableResource.Cluster = d.Get("cluster").(string)
 	tableResource.Database = d.Get("database").(string)
 	tableResource.Name = d.Get("name").(string)
-	tableResource.Columns = d.Get("column").([]interface{})
+	tableResource.setColumns(d.Get("column").([]interface{}))
 	tableResource.Engine = d.Get("engine").(string)
 	tableResource.Comment = common.GetComment(d.Get("comment").(string), tableResource.Cluster, nil)
 	tableResource.EngineParams = common.MapArrayInterfaceToArrayOfStrings(d.Get("engine_params").([]interface{}))

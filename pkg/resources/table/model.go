@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
+// -- begin DB read() types --
 type CHTable struct {
 	Database   string     `ch:"database"`
 	Name       string     `ch:"name"`
@@ -17,7 +18,6 @@ type CHTable struct {
 	Comment    string     `ch:"comment"`
 	Columns    []CHColumn `ch:"columns"`
 }
-
 type CHColumn struct {
 	Database string `ch:"database"`
 	Table    string `ch:"table"`
@@ -26,6 +26,9 @@ type CHColumn struct {
 	Comment  string `ch:"comment"`
 }
 
+// -- end DB read() types --
+
+// -- built from DB read, and from tf definition code --
 type TableResource struct {
 	Database     string
 	Name         string
@@ -35,16 +38,16 @@ type TableResource struct {
 	Comment      string
 	EngineParams []string
 	OrderBy      []string
-	Columns      []interface{}
+	Columns      []ColumnDefinition
 	PartitionBy  []PartitionByResource
 	Settings     map[string]string
 }
 
-type ColumnResource struct {
-	Name     string
-	Type     string
-	Nullable bool
-	Comment  string
+type ColumnDefinition struct {
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	Nullable bool   `json:"nullable"`
+	Comment  string `json:"comment"`
 }
 
 type PartitionByResource struct {
@@ -52,18 +55,19 @@ type PartitionByResource struct {
 	PartitionFunction string
 }
 
-func (t *CHTable) ColumnsToResource() []interface{} {
-	var columnResources []interface{}
+// -- end parsed types --
+
+func (t *CHTable) ColumnsToResource() []ColumnDefinition {
+	var columnResources []ColumnDefinition
 	for _, column := range t.Columns {
-		columnResource := map[string]interface{}{
-			"name":     column.Name,
-			"type":     removeNullable(column.Type),
-			"nullable": isNullable(column.Type),
-			"comment":  column.Comment,
+		columnResource := ColumnDefinition{
+			Name:     column.Name,
+			Type:     removeNullable(column.Type),
+			Nullable: isNullable(column.Type),
+			Comment:  column.Comment,
 		}
 		columnResources = append(columnResources, columnResource)
 	}
-
 	return columnResources
 }
 
@@ -111,14 +115,14 @@ func (t *CHTable) ToResource() (*TableResource, error) {
 	return &tableResource, nil
 }
 
-func (t *TableResource) GetColumnsResourceList() []ColumnResource {
-	var columnResources []ColumnResource
+func (t *TableResource) GetColumnsResourceList() []ColumnDefinition {
+	var columnResources []ColumnDefinition
 	for _, column := range t.Columns {
-		columnResources = append(columnResources, ColumnResource{
-			Name:     column.(map[string]interface{})["name"].(string),
-			Type:     column.(map[string]interface{})["type"].(string),
-			Nullable: column.(map[string]interface{})["nullable"].(bool),
-			Comment:  column.(map[string]interface{})["comment"].(string),
+		columnResources = append(columnResources, ColumnDefinition{
+			Name:     column.Name,
+			Type:     column.Type,
+			Nullable: column.Nullable,
+			Comment:  column.Comment,
 		})
 	}
 	return columnResources

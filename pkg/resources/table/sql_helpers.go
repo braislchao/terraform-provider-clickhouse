@@ -7,7 +7,7 @@ import (
 	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
 )
 
-func buildColumnsSentence(cols []ColumnResource) []string {
+func buildColumnsSentence(cols []ColumnDefinition) []string {
 	outColumn := make([]string, 0)
 	for _, col := range cols {
 		outColumn = append(outColumn, fmt.Sprintf("\t %s %s %s", col.Name, getTypeWithNullable(col.Type, col.Nullable), getComment(col.Comment)))
