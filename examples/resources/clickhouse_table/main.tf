@@ -11,7 +11,7 @@ provider "clickhouse" {
   port = 9000
   host           = "10.46.0.247"
   username       = "sonic"
-  password       = "A0VTelUpUmhN8nU4"
+  password       = ""
 }
 
 /*
