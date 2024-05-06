@@ -52,7 +52,36 @@ func (ts *CHTableService) GetTable(ctx context.Context, database string, table s
 		return nil, fmt.Errorf("getting columns for Clickhouse table: %v", err)
 	}
 
+	chTable.Indexes, err = ts.getTableIndexes(ctx, database, table)
+	if err != nil {
+		return nil, fmt.Errorf("getting indexes for Clickhouse table: %v", err)
+	}
+
 	return &chTable, nil
+}
+
+func (ts *CHTableService) getTableIndexes(ctx context.Context, database string, table string) ([]CHIndex, error) {
+	query := fmt.Sprintf(
+		"SELECT name, expr, type, granularity FROM system.data_skipping_indices WHERE database = '%s' AND table = '%s'",
+		database,
+		table,
+	)
+	rows, err := (*ts.CHConnection).Query(ctx, query)
+
+	if err != nil {
+		return nil, fmt.Errorf("reading indexes from Clickhouse: %v", err)
+	}
+
+	var chIndexes []CHIndex
+	for rows.Next() {
+		var index CHIndex
+		err := rows.ScanStruct(&index)
+		if err != nil {
+			return nil, fmt.Errorf("scanning Clickhouse index row: %v", err)
+		}
+		chIndexes = append(chIndexes, index)
+	}
+	return chIndexes, nil
 }
 
 func (ts *CHTableService) getTableColumns(ctx context.Context, database string, table string) ([]CHColumn, error) {

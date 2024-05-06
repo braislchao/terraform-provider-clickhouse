@@ -228,11 +228,28 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if err := d.Set("column", getColumns(tableResource.Columns)); err != nil {
 		return diag.FromErr(fmt.Errorf("setting column: %v", err))
 	}
+	if err := d.Set("index", getIndexes(tableResource.Indexes)); err != nil {
+		return diag.FromErr(fmt.Errorf("setting indexes: %v", err))
+	}
 	// not set - settings
 
 	d.SetId(tableResource.Cluster + ":" + database + ":" + tableName)
 
 	return diags
+}
+
+func getIndexes(indexes []IndexDefinition) []map[string]interface{} {
+	var ret []map[string]interface{}
+
+	for _, index := range indexes {
+		ret = append(ret, map[string]interface{}{
+			"name":        index.Name,
+			"expression":  index.Expression,
+			"type":        index.Type,
+			"granularity": index.Granularity,
+		})
+	}
+	return ret
 }
 
 func getColumns(columns []ColumnDefinition) []map[string]interface{} {
@@ -269,7 +286,7 @@ func (t *TableResource) setIndexes(indexes []interface{}) {
 			Name:        index.(map[string]interface{})["name"].(string),
 			Expression:  index.(map[string]interface{})["expression"].(string),
 			Type:        index.(map[string]interface{})["type"].(string),
-			Granularity: index.(map[string]interface{})["granularity"].(int),
+			Granularity: uint64(index.(map[string]interface{})["granularity"].(int)),
 		}
 		t.Indexes = append(t.Indexes, indexDefinition)
 	}

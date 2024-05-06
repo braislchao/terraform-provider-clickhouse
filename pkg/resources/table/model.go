@@ -17,7 +17,16 @@ type CHTable struct {
 	Engine     string     `ch:"engine"`
 	Comment    string     `ch:"comment"`
 	Columns    []CHColumn `ch:"columns"`
+	Indexes    []CHIndex  `ch:"indexes"`
 }
+
+type CHIndex struct {
+	Name        string `ch:"name"`
+	Expression  string `ch:"expr"`
+	Type        string `ch:"type"`
+	Granularity uint64 `ch:"granularity"`
+}
+
 type CHColumn struct {
 	Database string `ch:"database"`
 	Table    string `ch:"table"`
@@ -48,7 +57,7 @@ type IndexDefinition struct {
 	Name        string
 	Expression  string
 	Type        string
-	Granularity int
+	Granularity uint64
 }
 
 type ColumnDefinition struct {
@@ -65,6 +74,20 @@ type PartitionByResource struct {
 }
 
 // -- end parsed types --
+
+func (t *CHTable) IndexesToResource() []IndexDefinition {
+	var indexResources []IndexDefinition
+	for _, index := range t.Indexes {
+		indexResource := IndexDefinition{
+			Name:        index.Name,
+			Expression:  index.Expression,
+			Type:        index.Type,
+			Granularity: index.Granularity,
+		}
+		indexResources = append(indexResources, indexResource)
+	}
+	return indexResources
+}
 
 func (t *CHTable) ColumnsToResource() []ColumnDefinition {
 	var columnResources []ColumnDefinition
@@ -110,6 +133,7 @@ func (t *CHTable) ToResource() (*TableResource, error) {
 		EngineFull: t.EngineFull,
 		Engine:     t.Engine,
 		Columns:    t.ColumnsToResource(),
+		Indexes:    t.IndexesToResource(),
 	}
 
 	engineParams := GetEngineParams(t.EngineFull)
@@ -154,7 +178,6 @@ func GetOrderBy(engineFull string) []string {
 	var orderBy []string
 	if len(match) > 1 {
 		values := strings.Split(match[1], ",")
-		fmt.Println(values)
 		for _, value := range values {
 			value = strings.TrimSpace(value)
 			orderBy = append(orderBy, value)
