@@ -15,6 +15,18 @@ func buildColumnsSentence(cols []ColumnDefinition) []string {
 	return outColumn
 }
 
+func buildIndexesSentence(indexes []IndexDefinition) []string {
+	outIndexes := make([]string, 0)
+	for _, index := range indexes {
+		indexStatement := fmt.Sprintf("INDEX %s %s TYPE %s", index.Name, index.Expression, index.Type)
+		if index.Granularity > 0 {
+			indexStatement += fmt.Sprintf(" GRANULARITY %d", index.Granularity)
+		}
+		outIndexes = append(outIndexes, fmt.Sprintf("\t%s", indexStatement))
+	}
+	return outIndexes
+}
+
 func getComment(comment string) string {
 	if comment != "" {
 		return fmt.Sprintf("COMMENT '%s'", comment)
@@ -73,8 +85,16 @@ func buildSettingsSentence(settings map[string]string) string {
 func buildCreateOnClusterSentence(resource TableResource) (query string) {
 	columnsStatement := ""
 	if len(resource.Columns) > 0 {
+		columnsStatement = "("
 		columnsList := buildColumnsSentence(resource.GetColumnsResourceList())
-		columnsStatement = "(" + strings.Join(columnsList, ",\n") + ")\n"
+		columnsStatement += strings.Join(columnsList, ",\n")
+		columnsStatement += ",\n"
+
+		if len(resource.Indexes) > 0 {
+			indexesList := buildIndexesSentence(resource.Indexes)
+			columnsStatement += strings.Join(indexesList, ",\n")
+		}
+		columnsStatement += ")\n"
 	}
 
 	clusterStatement := common.GetClusterStatement(resource.Cluster)

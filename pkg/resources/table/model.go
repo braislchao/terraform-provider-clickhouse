@@ -40,7 +40,15 @@ type TableResource struct {
 	OrderBy      []string
 	Columns      []ColumnDefinition
 	PartitionBy  []PartitionByResource
+	Indexes      []IndexDefinition
 	Settings     map[string]string
+}
+
+type IndexDefinition struct {
+	Name        string
+	Expression  string
+	Type        string
+	Granularity int
 }
 
 type ColumnDefinition struct {

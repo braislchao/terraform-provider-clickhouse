@@ -144,6 +144,40 @@ func ResourceTable() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"index": {
+				Description: "Index",
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Description: "Index Name",
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    true,
+						},
+						"expression": {
+							Description: "Index Expression",
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    true,
+						},
+						"type": {
+							Description: "Index Type",
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    true,
+						},
+						"granularity": {
+							Description: "Index Granularity",
+							Type:        schema.TypeInt,
+							Optional:    true,
+							ForceNew:    true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -229,6 +263,18 @@ func (t *TableResource) setColumns(columns []interface{}) {
 	}
 }
 
+func (t *TableResource) setIndexes(indexes []interface{}) {
+	for _, index := range indexes {
+		indexDefinition := IndexDefinition{
+			Name:        index.(map[string]interface{})["name"].(string),
+			Expression:  index.(map[string]interface{})["expression"].(string),
+			Type:        index.(map[string]interface{})["type"].(string),
+			Granularity: index.(map[string]interface{})["granularity"].(int),
+		}
+		t.Indexes = append(t.Indexes, indexDefinition)
+	}
+}
+
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -241,6 +287,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	tableResource.Database = d.Get("database").(string)
 	tableResource.Name = d.Get("name").(string)
 	tableResource.setColumns(d.Get("column").([]interface{}))
+	tableResource.setIndexes(d.Get("index").([]interface{}))
 	tableResource.Engine = d.Get("engine").(string)
 	tableResource.Comment = common.GetComment(d.Get("comment").(string), tableResource.Cluster, nil)
 	tableResource.EngineParams = common.MapArrayInterfaceToArrayOfStrings(d.Get("engine_params").([]interface{}))

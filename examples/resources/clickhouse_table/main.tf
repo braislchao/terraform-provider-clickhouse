@@ -11,7 +11,7 @@ provider "clickhouse" {
   port = 9000
   host           = "10.46.0.247"
   username       = "sonic"
-  password       = ""
+  password       = "A0VTelUpUmhN8nU4"
 }
 
 /*
@@ -51,6 +51,7 @@ resource "clickhouse_table" "t2" {
   name          = "replicated_test"
   engine        = "ReplicatedReplacingMergeTree"
   engine_params = []
+  comment = "hi!"
   cluster = "main"
   column {
     name = "event_date"
@@ -58,6 +59,10 @@ resource "clickhouse_table" "t2" {
   }
   column {
     name = "event_type"
+    type = "Int32"
+  }
+  column {
+    name = "event_type_2"
     type = "Int32"
   }
   column {
@@ -70,7 +75,16 @@ resource "clickhouse_table" "t2" {
     type = "String"
     array = true
   }
-  order_by = ["event_date"]
+  order_by = ["event_date", "event_type"]
+  partition_by {
+    by = "event_date"
+  }
+  index {
+    name = "test_index"
+    expression = "[event_type, event_type_2]"
+    type = "minmax"
+    granularity = 10000
+  }
 }
 
 /*
