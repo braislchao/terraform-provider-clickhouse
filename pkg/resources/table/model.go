@@ -104,9 +104,25 @@ func (t *CHTable) ToResource() (*TableResource, error) {
 		Columns:    t.ColumnsToResource(),
 	}
 
-	r := regexp.MustCompile(`\(([^)]*)\)`)
+	engineParams := GetEngineParams(t.EngineFull)
+	orderBy := GetOrderBy(t.EngineFull)
 
-	match := r.FindStringSubmatch(t.EngineFull)
+	comment, cluster, _, err := common.UnmarshalComment(t.Comment)
+	if err != nil {
+		return nil, err
+	}
+
+	tableResource.OrderBy = orderBy
+	tableResource.Cluster = cluster
+	tableResource.Comment = comment
+	tableResource.EngineParams = removeDefaultParams(engineParams)
+
+	return &tableResource, nil
+}
+
+func GetEngineParams(engineFull string) []string {
+	r := regexp.MustCompile(`\(([^)]*)\)`)
+	match := r.FindStringSubmatch(engineFull)
 	var engineParams []string
 	if len(match) > 1 {
 		values := strings.Split(match[1], ",")
@@ -115,17 +131,29 @@ func (t *CHTable) ToResource() (*TableResource, error) {
 			engineParams = append(engineParams, strings.TrimSpace(value))
 		}
 	}
+	return engineParams
+}
 
-	comment, cluster, _, err := common.UnmarshalComment(t.Comment)
-	if err != nil {
-		return nil, err
+func GetOrderBy(engineFull string) []string {
+	fmt.Println(engineFull)
+	rSingle := regexp.MustCompile(`ORDER BY\s*\(([^)]+)\)`)
+	match := rSingle.FindStringSubmatch(engineFull)
+	if len(match) == 0 {
+		rMultiple := regexp.MustCompile(`ORDER BY\s+([^ ]+)`)
+		match = rMultiple.FindStringSubmatch(engineFull)
 	}
 
-	tableResource.Cluster = cluster
-	tableResource.Comment = comment
-	tableResource.EngineParams = removeDefaultParams(engineParams)
-
-	return &tableResource, nil
+	var orderBy []string
+	if len(match) > 1 {
+		fmt.Println("match")
+		values := strings.Split(match[1], ",")
+		fmt.Println(values)
+		for _, value := range values {
+			value = strings.TrimSpace(value)
+			orderBy = append(orderBy, value)
+		}
+	}
+	return orderBy
 }
 
 // without this, terraform sees a diff for Replicated tables
