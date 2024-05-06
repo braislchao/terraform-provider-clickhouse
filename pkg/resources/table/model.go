@@ -105,7 +105,7 @@ func (t *CHTable) ToResource() (*TableResource, error) {
 	}
 
 	engineParams := GetEngineParams(t.EngineFull)
-	orderBy := GetValuesMaybeWrapped(t.EngineFull, "ORDER_BY")
+	orderBy := GetOrderBy(t.EngineFull)
 
 	comment, cluster, _, err := common.UnmarshalComment(t.Comment)
 	if err != nil {
@@ -134,18 +134,17 @@ func GetEngineParams(engineFull string) []string {
 	return engineParams
 }
 
-func GetValuesMaybeWrapped(engineFull string, preceedingString string) []string {
-	rSingle := regexp.MustCompile(fmt.Sprintf(`%s\s*\(([^)]+)\)`, preceedingString))
+func GetOrderBy(engineFull string) []string {
+	rMultiple := regexp.MustCompile(`ORDER BY\s*\(([^)]+)\)`)
 
-	match := rSingle.FindStringSubmatch(engineFull)
+	match := rMultiple.FindStringSubmatch(engineFull)
 	if len(match) == 0 {
-		rMultiple := regexp.MustCompile(fmt.Sprintf(`%s\s+([^ ]+)`, preceedingString))
-		match = rMultiple.FindStringSubmatch(engineFull)
+		rSingle := regexp.MustCompile(`ORDER BY\s+([^ ]+)`)
+		match = rSingle.FindStringSubmatch(engineFull)
 	}
 
 	var orderBy []string
 	if len(match) > 1 {
-		fmt.Println("match")
 		values := strings.Split(match[1], ",")
 		fmt.Println(values)
 		for _, value := range values {
