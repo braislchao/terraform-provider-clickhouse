@@ -46,6 +46,7 @@ type TableResource struct {
 type ColumnDefinition struct {
 	Name     string `json:"name"`
 	Type     string `json:"type"`
+	Array    bool   `json:"array"`
 	Nullable bool   `json:"nullable"`
 	Comment  string `json:"comment"`
 }
@@ -62,8 +63,9 @@ func (t *CHTable) ColumnsToResource() []ColumnDefinition {
 	for _, column := range t.Columns {
 		columnResource := ColumnDefinition{
 			Name:     column.Name,
-			Type:     removeNullable(column.Type),
-			Nullable: isNullable(column.Type),
+			Type:     removeNullable(removeArray(column.Type)),
+			Array:    isArray(column.Type),
+			Nullable: isNullable(removeArray(column.Type)),
 			Comment:  column.Comment,
 		}
 		columnResources = append(columnResources, columnResource)
@@ -72,7 +74,7 @@ func (t *CHTable) ColumnsToResource() []ColumnDefinition {
 }
 
 func removeNullable(columnType string) string {
-	if strings.HasPrefix(columnType, "Nullable(") && strings.HasSuffix(columnType, ")") {
+	if strings.HasPrefix(columnType, "Nullable(") {
 		return strings.TrimSuffix(strings.TrimPrefix(columnType, "Nullable("), ")")
 	}
 	return columnType
@@ -80,6 +82,17 @@ func removeNullable(columnType string) string {
 
 func isNullable(columnType string) bool {
 	return strings.HasPrefix(columnType, "Nullable")
+}
+
+func isArray(columnType string) bool {
+	return strings.HasPrefix(columnType, "Array")
+}
+
+func removeArray(columnType string) string {
+	if strings.HasPrefix(columnType, "Array(") {
+		return strings.TrimSuffix(strings.TrimPrefix(columnType, "Array("), ")")
+	}
+	return columnType
 }
 
 func (t *CHTable) ToResource() (*TableResource, error) {
@@ -133,6 +146,7 @@ func (t *TableResource) GetColumnsResourceList() []ColumnDefinition {
 			Name:     column.Name,
 			Type:     column.Type,
 			Nullable: column.Nullable,
+			Array:    column.Array,
 			Comment:  column.Comment,
 		})
 	}

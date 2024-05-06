@@ -112,6 +112,13 @@ func ResourceTable() *schema.Resource {
 							ValidateDiagFunc: ValidateType,
 							ForceNew:         true,
 						},
+						"array": {
+							Description: "Column Array",
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
+							ForceNew:    true,
+						},
 						"nullable": {
 							Description: "Column Nullable",
 							Type:        schema.TypeBool,
@@ -193,6 +200,7 @@ func getColumns(columns []ColumnDefinition) []map[string]interface{} {
 		ret = append(ret, map[string]interface{}{
 			"name":     column.Name,
 			"type":     column.Type,
+			"array":    column.Array,
 			"nullable": column.Nullable,
 			"comment":  column.Comment,
 		})
@@ -205,6 +213,7 @@ func (t *TableResource) setColumns(columns []interface{}) {
 		columnDefinition := ColumnDefinition{
 			Name:     column.(map[string]interface{})["name"].(string),
 			Type:     column.(map[string]interface{})["type"].(string),
+			Array:    column.(map[string]interface{})["array"].(bool),
 			Nullable: column.(map[string]interface{})["nullable"].(bool),
 			Comment:  column.(map[string]interface{})["comment"].(string),
 		}
