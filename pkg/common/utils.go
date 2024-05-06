@@ -36,7 +36,9 @@ func UnmarshalComment(storedComment string) (comment string, cluster string, toT
 	}
 	comment = dat["comment"].(string)
 	cluster = dat["cluster"].(string)
-	toTable = dat["to_table"].(string)
+	if dat["to_table"] != nil {
+		toTable = dat["to_table"].(string)
+	}
 
 	return comment, cluster, toTable, err
 }
