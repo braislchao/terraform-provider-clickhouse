@@ -110,9 +110,20 @@ func (t *CHTable) ToResource() (*TableResource, error) {
 
 	tableResource.Cluster = cluster
 	tableResource.Comment = comment
-	tableResource.EngineParams = engineParams
+	tableResource.EngineParams = removeDefaultParams(engineParams)
 
 	return &tableResource, nil
+}
+
+// without this, terraform sees a diff for Replicated tables
+func removeDefaultParams(engineParams []string) []string {
+	var newEngineParams []string
+	for _, param := range engineParams {
+		if param != "'/clickhouse/tables/{uuid}/{shard}'" && param != "'{replica}'" {
+			newEngineParams = append(newEngineParams, param)
+		}
+	}
+	return newEngineParams
 }
 
 func (t *TableResource) GetColumnsResourceList() []ColumnDefinition {
