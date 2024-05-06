@@ -172,8 +172,14 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if err := d.Set("database", tableResource.Database); err != nil {
 		return diag.FromErr(fmt.Errorf("setting database: %v", err))
 	}
+	if err := d.Set("comment", tableResource.Comment); err != nil {
+		return diag.FromErr(fmt.Errorf("setting comment: %v", err))
+	}
 	if err := d.Set("name", tableResource.Name); err != nil {
 		return diag.FromErr(fmt.Errorf("setting name: %v", err))
+	}
+	if err := d.Set("cluster", tableResource.Cluster); err != nil {
+		return diag.FromErr(fmt.Errorf("setting cluster: %v", err))
 	}
 	if err := d.Set("engine", tableResource.Engine); err != nil {
 		return diag.FromErr(fmt.Errorf("setting engine: %v", err))
@@ -181,12 +187,14 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if err := d.Set("engine_params", tableResource.EngineParams); err != nil {
 		return diag.FromErr(fmt.Errorf("setting engine_params: %v", err))
 	}
-	if err := d.Set("cluster", tableResource.Cluster); err != nil {
-		return diag.FromErr(fmt.Errorf("setting cluster: %v", err))
+	if err := d.Set("order_by", tableResource.OrderBy); err != nil {
+		return diag.FromErr(fmt.Errorf("setting order_by: %v", err))
 	}
+	// not set - partition_by
 	if err := d.Set("column", getColumns(tableResource.Columns)); err != nil {
 		return diag.FromErr(fmt.Errorf("setting column: %v", err))
 	}
+	// not set - settings
 
 	d.SetId(tableResource.Cluster + ":" + database + ":" + tableName)
 
