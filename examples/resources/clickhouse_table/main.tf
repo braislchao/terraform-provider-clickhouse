@@ -14,7 +14,7 @@ provider "clickhouse" {
   password       = ""
 }
 
-
+/*
 resource "clickhouse_table" "replicated_table" {
   database      = "default"
   name          = "kafka_test"
@@ -44,8 +44,8 @@ resource "clickhouse_table" "replicated_table" {
   }
   
 }
+*/
 
-/*
 resource "clickhouse_table" "t2" {
   database      = "default"
   name          = "replicated_test"
@@ -61,16 +61,17 @@ resource "clickhouse_table" "t2" {
     type = "Int32"
   }
   column {
-    name = "article_id"
+    name = "article.id"
     type = "Int32"
+    array = true
   }
   column {
-    name = "title"
+    name = "article.title"
     type = "String"
+    array = true
   }
   order_by = ["event_date"]
 }
-*/
 
 /*
 resource "clickhouse_view" "test_view" {
