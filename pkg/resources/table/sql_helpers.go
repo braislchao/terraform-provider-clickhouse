@@ -46,7 +46,7 @@ func buildPartitionBySentence(partitionBy []PartitionByResource) string {
 				partitionBySentenceItems = append(partitionBySentenceItems, fmt.Sprintf("%v(%v)", partitionByItem.PartitionFunction, partitionByItem.By))
 			}
 		}
-		return fmt.Sprintf("PARTITION BY %v", strings.Join(partitionBySentenceItems, ", "))
+		return fmt.Sprintf("PARTITION BY (%v)", strings.Join(partitionBySentenceItems, ", "))
 	}
 	return ""
 }
