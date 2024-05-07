@@ -3,6 +3,7 @@ package resourceview
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
@@ -43,6 +44,9 @@ func (ts *CHViewService) GetView(ctx context.Context, database string, view stri
 
 	var chView CHView
 	err := row.ScanStruct(&chView)
+	if err != nil && strings.Contains(err.Error(), "no rows in result set") {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, fmt.Errorf("scanning Clickhouse view row: %v", err)
 	}

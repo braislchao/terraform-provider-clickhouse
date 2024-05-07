@@ -193,6 +193,10 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	chTableService := CHTableService{CHConnection: conn}
 	chTable, err := chTableService.GetTable(ctx, database, tableName)
+	if chTable == nil && err == nil {
+		d.SetId("")
+		return diags
+	}
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("reading Clickhouse table: %v", err))

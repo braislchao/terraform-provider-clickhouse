@@ -3,6 +3,7 @@ package resourcetable
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
@@ -43,6 +44,9 @@ func (ts *CHTableService) GetTable(ctx context.Context, database string, table s
 
 	var chTable CHTable
 	err := row.ScanStruct(&chTable)
+	if err != nil && strings.Contains(err.Error(), "no rows in result set") {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, fmt.Errorf("scanning Clickhouse table row: %v", err)
 	}
