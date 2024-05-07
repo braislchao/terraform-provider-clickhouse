@@ -3,7 +3,6 @@ package resourceview
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -96,7 +95,7 @@ func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	if err := d.Set("cluster", viewResource.Cluster); err != nil {
 		return diag.FromErr(fmt.Errorf("setting cluster: %v", err))
 	}
-	if err := d.Set("query", strings.ToLower(viewResource.Query)); err != nil {
+	if err := d.Set("query", viewResource.Query); err != nil {
 		return diag.FromErr(fmt.Errorf("setting cluster: %v", err))
 	}
 	if err := d.Set("materialized", viewResource.Materialized); err != nil {
@@ -120,7 +119,7 @@ func resourceViewCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	viewResource.Cluster = d.Get("cluster").(string)
 	viewResource.Database = d.Get("database").(string)
 	viewResource.Name = d.Get("name").(string)
-	viewResource.Query = strings.ToLower(d.Get("query").(string))
+	viewResource.Query = d.Get("query").(string)
 	viewResource.Materialized = d.Get("materialized").(bool)
 	viewResource.ToTable = d.Get("to_table").(string)
 	viewResource.Comment = common.GetComment(d.Get("comment").(string), viewResource.Cluster, &viewResource.ToTable)
