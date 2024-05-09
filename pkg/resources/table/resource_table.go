@@ -195,7 +195,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	chTable, err := chTableService.GetTable(ctx, database, tableName)
 	if chTable == nil && err == nil {
 		d.SetId("")
-		return diags
+		return nil
 	}
 
 	if err != nil {

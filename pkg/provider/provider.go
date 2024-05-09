@@ -140,7 +140,7 @@ func configure() func(context.Context, *schema.ResourceData) (any, diag.Diagnost
 				Password: password,
 			},
 			Settings: clickhouse.Settings{
-				"max_execution_time": 30,
+				"max_execution_time": 300,
 			},
 			TLS: TLSConfig,
 		})
