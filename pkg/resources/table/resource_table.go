@@ -42,11 +42,10 @@ func ResourceTable() *schema.Resource {
 				ForceNew:    true,
 			},
 			"engine": {
-				Description:      "Table engine type (Supported types so far: Distributed, ReplicatedReplacingMergeTree, ReplacingMergeTree)",
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: ValidateOnClusterEngine,
+				Description: "Table engine type (Supported types so far: Distributed, ReplicatedReplacingMergeTree, ReplacingMergeTree)",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 			},
 			"engine_params": {
 				Description: "Engine params in case the engine type requires them",

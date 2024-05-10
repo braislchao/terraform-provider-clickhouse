@@ -49,7 +49,7 @@ resource "clickhouse_table" "replicated_table" {
 resource "clickhouse_table" "t2" {
   database      = "default"
   name          = "Replicated_test"
-  engine        = "ReplicatedReplacingMergeTree"
+  engine        = "MergeTree"
   engine_params = []
   comment = "hi!"
   cluster = "main"
