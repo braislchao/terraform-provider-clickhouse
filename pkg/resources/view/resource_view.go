@@ -140,7 +140,13 @@ func resourceViewCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	err := chViewService.CreateView(ctx, viewResource)
 
 	if err != nil {
-		return diag.FromErr(err)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Error",
+			Detail:   fmt.Sprintf("Error creating view: %v", err),
+		})
+		fmt.Println("testFail===")
+		return diags
 	}
 
 	d.SetId(viewResource.Cluster + ":" + viewResource.Database + ":" + viewResource.Name)
