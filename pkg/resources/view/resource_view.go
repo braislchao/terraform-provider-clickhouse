@@ -174,5 +174,7 @@ func resourceViewDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	fmt.Println("testDelete===")
+	d.SetId("")
 	return diags
 }
