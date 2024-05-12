@@ -145,7 +145,8 @@ func resourceViewCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 			Summary:  "Error",
 			Detail:   fmt.Sprintf("Error creating view: %v", err),
 		})
-		fmt.Println("testFail===")
+		fmt.Println("testFail1===")
+		d.SetId("")
 		return diags
 	}
 
