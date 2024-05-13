@@ -34,17 +34,9 @@ func getComment(comment string) string {
 	return ""
 }
 
-func buildPartitionBySentence(partitionBy []PartitionByResource) string {
+func buildPartitionBySentence(partitionBy []string) string {
 	if len(partitionBy) > 0 {
-		partitionBySentenceItems := make([]string, 0)
-		for _, partitionByItem := range partitionBy {
-			if partitionByItem.PartitionFunction == "" {
-				partitionBySentenceItems = append(partitionBySentenceItems, partitionByItem.By)
-			} else {
-				partitionBySentenceItems = append(partitionBySentenceItems, fmt.Sprintf("%v(%v)", partitionByItem.PartitionFunction, partitionByItem.By))
-			}
-		}
-		return fmt.Sprintf("PARTITION BY (%v)", strings.Join(partitionBySentenceItems, ", "))
+		return fmt.Sprintf("PARTITION BY (%v)", strings.Join(partitionBy, ", "))
 	}
 	return ""
 }

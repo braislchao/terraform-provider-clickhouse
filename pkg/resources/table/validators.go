@@ -8,23 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
-func ValidatePartitionBy(inValue any, p hashicorpcty.Path) diag.Diagnostics {
-	validate := v.New()
-	value := inValue.(string)
-	toAllowedPartitioningFunctions := "toYYYYMM toYYYYMMDD toYYYYMMDDhhmmss"
-	validation := fmt.Sprintf("oneof=%v", toAllowedPartitioningFunctions)
-	var diags diag.Diagnostics
-	if validate.Var(value, validation) != nil {
-		diag := diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "wrong value",
-			Detail:   fmt.Sprintf("%q is not %q", value, toAllowedPartitioningFunctions),
-		}
-		diags = append(diags, diag)
-	}
-	return diags
-}
-
 func ValidateOnClusterEngine(inValue any, p hashicorpcty.Path) diag.Diagnostics {
 	validate := v.New()
 	value := inValue.(string)

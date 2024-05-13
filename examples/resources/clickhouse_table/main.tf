@@ -74,9 +74,7 @@ resource "clickhouse_table" "t2" {
     type = "String"
   }
   order_by = ["event_date", "event_type"]
-  partition_by {
-    by = "event_date"
-  }
+  partition_by = ["sipHash64(event_date) % 100", "event_type"]
   index {
     name = "test_index"
     expression = "[event_type, event_type_2]"
@@ -90,8 +88,9 @@ resource "clickhouse_view" "test_view" {
   database      = "default"
   name          = "test_view"
   cluster="main"
-query = "SELECT * FROM default.shop_settings LIMIT 10"
-}*/
+query = "SELECT *x FROM default.shop_settings LIMIT 10"
+}
+*/
 
 /*
 resource "clickhouse_view" "test_materialized_view" {

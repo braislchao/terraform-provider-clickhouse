@@ -72,23 +72,9 @@ func ResourceTable() *schema.Resource {
 				Type:        schema.TypeList,
 				Optional:    true,
 				ForceNew:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"by": {
-							Description: "Column to use as part of the partition key",
-							Type:        schema.TypeString,
-							Required:    true,
-							ForceNew:    true,
-						},
-						"partition_function": {
-							Description:      "Partition function, could be empty or one of following: toYYYYMM, toYYYYMMDD or toYYYYMMDDhhmmss",
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: ValidatePartitionBy,
-							Default:          nil,
-							ForceNew:         true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type:     schema.TypeString,
+					ForceNew: true,
 				},
 			},
 			"column": {
@@ -212,7 +198,9 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if err := d.Set("order_by", tableResource.OrderBy); err != nil {
 		return diag.FromErr(fmt.Errorf("setting order_by: %v", err))
 	}
-	// not set - partition_by
+	if err := d.Set("partition_by", tableResource.PartitionBy); err != nil {
+		return diag.FromErr(fmt.Errorf("setting partition_by: %v", err))
+	}
 	if err := d.Set("column", getColumns(tableResource.Columns)); err != nil {
 		return diag.FromErr(fmt.Errorf("setting column: %v", err))
 	}
@@ -293,7 +281,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	tableResource.Comment = common.GetComment(d.Get("comment").(string), tableResource.Cluster, nil)
 	tableResource.EngineParams = common.MapArrayInterfaceToArrayOfStrings(d.Get("engine_params").([]interface{}))
 	tableResource.OrderBy = common.MapArrayInterfaceToArrayOfStrings(d.Get("order_by").([]interface{}))
-	tableResource.SetPartitionBy(d.Get("partition_by").([]interface{}))
+	tableResource.PartitionBy = common.MapArrayInterfaceToArrayOfStrings(d.Get("partition_by").([]interface{}))
 	tableResource.Settings = common.MapInterfaceToMapOfString(d.Get("settings").(map[string]interface{}))
 
 	if tableResource.Cluster == "" {
