@@ -46,6 +46,9 @@ func ResourceView() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
+				StateFunc: func(val interface{}) string {
+					return common.FormatSQL(val.(string))
+				},
 			},
 			"materialized": {
 				Description: "Is materialized view",

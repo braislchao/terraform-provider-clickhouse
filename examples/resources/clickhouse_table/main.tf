@@ -92,13 +92,13 @@ resource "clickhouse_table" "t2" {
   }
 }
 
-/*
+
 resource "clickhouse_view" "test_view" {
   database      = "default"
   name          = "test_view"
   cluster="main"
-query = "SELECT * FROM default.shop_settings LIMIT 10"
-}*/
+query = "select * FROM default.shop_settings LIMIT 10"
+}
 
 /*
 resource "clickhouse_view" "test_materialized_view" {

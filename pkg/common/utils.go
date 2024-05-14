@@ -1,8 +1,10 @@
 package common
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"os/exec"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -73,4 +75,24 @@ func StringListToSet(list []string) *schema.Set {
 		set = append(set, item)
 	}
 	return schema.NewSet(schema.HashString, set)
+}
+
+func FormatSQL(sql string) string {
+	cmd := exec.Command("clickhouse", "format", "--oneline", "--query", sql)
+
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+
+	if err != nil {
+		return sql
+	}
+
+	ret := out.String()
+	ret = strings.Trim(ret, "\n")
+
+	return ret
 }
