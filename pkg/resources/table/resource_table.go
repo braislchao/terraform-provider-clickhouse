@@ -198,9 +198,9 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if err := d.Set("order_by", tableResource.OrderBy); err != nil {
 		return diag.FromErr(fmt.Errorf("setting order_by: %v", err))
 	}
-	// if err := d.Set("partition_by", tableResource.PartitionBy); err != nil {
-	// 	return diag.FromErr(fmt.Errorf("setting partition_by: %v", err))
-	// }
+	if err := d.Set("partition_by", tableResource.PartitionBy); err != nil {
+		return diag.FromErr(fmt.Errorf("setting partition_by: %v", err))
+	}
 	if err := d.Set("column", getColumns(tableResource.Columns)); err != nil {
 		return diag.FromErr(fmt.Errorf("setting column: %v", err))
 	}
