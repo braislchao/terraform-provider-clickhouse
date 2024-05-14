@@ -103,6 +103,20 @@ func ResourceTable() *schema.Resource {
 				ForceNew:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"def_kind": {
+							Description: "Column Default Kind",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     nil,
+							ForceNew:    true,
+						},
+						"def_expression": {
+							Description: "Column Default Expression",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     nil,
+							ForceNew:    true,
+						},
 						"name": {
 							Description: "Column Name",
 							Type:        schema.TypeString,
@@ -117,18 +131,6 @@ func ResourceTable() *schema.Resource {
 						},
 						"comment": {
 							Description: "Column Comment",
-							Type:        schema.TypeString,
-							Optional:    true,
-							ForceNew:    true,
-						},
-						"defaultkind": {
-							Description: "Column Default Kind",
-							Type:        schema.TypeString,
-							Optional:    true,
-							ForceNew:    true,
-						},
-						"defaultexpression": {
-							Description: "Column Default Expression",
 							Type:        schema.TypeString,
 							Optional:    true,
 							ForceNew:    true,
@@ -262,11 +264,11 @@ func getColumns(columns []ColumnDefinition) []map[string]interface{} {
 
 	for _, column := range columns {
 		ret = append(ret, map[string]interface{}{
-			"name":              column.Name,
-			"type":              column.Type,
-			"comment":           column.Comment,
-			"defaultkind":       column.DefaultKind,
-			"defaultexpression": column.DefaultExpression,
+			"name":           column.Name,
+			"type":           column.Type,
+			"comment":        column.Comment,
+			"def_kind":       column.DefaultKind,
+			"def_expression": column.DefaultExpression,
 		})
 	}
 	return ret
@@ -278,8 +280,8 @@ func (t *TableResource) setColumns(columns []interface{}) {
 			Name:              column.(map[string]interface{})["name"].(string),
 			Type:              column.(map[string]interface{})["type"].(string),
 			Comment:           column.(map[string]interface{})["comment"].(string),
-			DefaultKind:       column.(map[string]interface{})["defaultkind"].(string),
-			DefaultExpression: column.(map[string]interface{})["defaultexpression"].(string),
+			DefaultKind:       column.(map[string]interface{})["def_kind"].(string),
+			DefaultExpression: column.(map[string]interface{})["def_expression"].(string),
 		}
 		t.Columns = append(t.Columns, columnDefinition)
 	}

@@ -60,8 +60,8 @@ resource "clickhouse_table" "t2" {
   column {
     name = "event_type"
     type = "Int32"
-    defaultkind = "DEFAULT"
-    defaultexpression = 5
+    def_kind = "DEFAULT"
+    def_expression = 5
   }
   column {
     name = "event_type_2"
@@ -74,8 +74,8 @@ resource "clickhouse_table" "t2" {
   column {
     name = "article.title"
     type = "String"
-        defaultkind = "DEFAULT"
-    defaultexpression = "5"
+        def_kind = "DEFAULT"
+    def_expression = "5"
 
   }
   order_by = ["event_date", "event_type"]
@@ -97,13 +97,13 @@ resource "clickhouse_table" "t2" {
   }
 }
 
-
+/*
 resource "clickhouse_view" "test_view" {
   database      = "default"
   name          = "test_view"
   cluster="main"
-query = "select * FROM default.shop_settings LIMIT 10"
-}
+query = "SELECT * FROM default.shop_settings LIMIT 10"
+}*/
 
 /*
 resource "clickhouse_view" "test_materialized_view" {
