@@ -48,7 +48,7 @@ type TableResource struct {
 	EngineParams []string
 	OrderBy      []string
 	Columns      []ColumnDefinition
-	PartitionBy  []string
+	PartitionBy  []PartitionByResource
 	Indexes      []IndexDefinition
 	Settings     map[string]string
 }
@@ -64,6 +64,11 @@ type ColumnDefinition struct {
 	Name    string `json:"name"`
 	Type    string `json:"type"`
 	Comment string `json:"comment"`
+}
+
+type PartitionByResource struct {
+	By                string
+	PartitionFunction string
 }
 
 // -- end parsed types --
@@ -178,6 +183,16 @@ func (t *TableResource) GetColumnsResourceList() []ColumnDefinition {
 	return columnResources
 }
 
+func (t *TableResource) SetPartitionBy(partitionBy []interface{}) {
+	for _, partitionBy := range partitionBy {
+		partitionByResource := PartitionByResource{
+			By:                partitionBy.(map[string]interface{})["by"].(string),
+			PartitionFunction: partitionBy.(map[string]interface{})["partition_function"].(string),
+		}
+		t.PartitionBy = append(t.PartitionBy, partitionByResource)
+	}
+}
+
 func (t *TableResource) HasColumn(columnName string) bool {
 	for _, column := range t.GetColumnsResourceList() {
 		if column.Name == columnName {
@@ -189,6 +204,7 @@ func (t *TableResource) HasColumn(columnName string) bool {
 
 func (t *TableResource) Validate(diags diag.Diagnostics) {
 	t.validateOrderBy(diags)
+	t.validatePartitionBy(diags)
 }
 
 func (t *TableResource) validateOrderBy(diags diag.Diagnostics) {
@@ -198,6 +214,18 @@ func (t *TableResource) validateOrderBy(diags diag.Diagnostics) {
 				Severity: diag.Error,
 				Summary:  "wrong value",
 				Detail:   fmt.Sprintf("order by field '%s' is not a column", orderField),
+			})
+		}
+	}
+}
+
+func (t *TableResource) validatePartitionBy(diags diag.Diagnostics) {
+	for _, partitionBy := range t.PartitionBy {
+		if t.HasColumn(partitionBy.By) == false {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "wrong value",
+				Detail:   fmt.Sprintf("partition by field '%s' is not a column", partitionBy.By),
 			})
 		}
 	}
