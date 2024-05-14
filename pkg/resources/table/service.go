@@ -113,7 +113,7 @@ func (ts *CHTableService) getTableColumns(ctx context.Context, database string, 
 }
 
 func (ts *CHTableService) CreateTable(ctx context.Context, tableResource TableResource) error {
-	query := formatSQL(buildCreateOnClusterSentence(tableResource))
+	query := buildCreateOnClusterSentence(tableResource)
 	err := (*ts.CHConnection).Exec(ctx, query)
 	if err != nil {
 		return fmt.Errorf("creating Clickhouse table: %v", err)

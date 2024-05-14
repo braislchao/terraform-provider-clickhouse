@@ -1,11 +1,8 @@
 package resourcetable
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
-
-	"os/exec"
 
 	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
 )
@@ -104,20 +101,4 @@ func buildCreateOnClusterSentence(resource TableResource) (query string) {
 		resource.Comment,
 	)
 	return ret
-}
-
-func formatSQL(sql string) string {
-	cmd := exec.Command("clickhouse", "format", "--format", sql)
-
-	var out bytes.Buffer
-	cmd.Stdout = &out
-
-	cmd.Stdin = bytes.NewBufferString(sql)
-
-	err := cmd.Run()
-	if err != nil {
-		return sql
-	}
-
-	return out.String()
 }
