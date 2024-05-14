@@ -69,6 +69,7 @@ type ColumnDefinition struct {
 type PartitionByResource struct {
 	By                string
 	PartitionFunction string
+	Mod               string
 }
 
 // -- end parsed types --
@@ -127,7 +128,7 @@ func (t *CHTable) ToResource() (*TableResource, error) {
 }
 
 func GetEngineParams(engineFull string) []string {
-	r := regexp.MustCompile(`\(([^)]*)\)`)
+	r := regexp.MustCompile(`^\w+\(([^)]*)\)`)
 	match := r.FindStringSubmatch(engineFull)
 	var engineParams []string
 	if len(match) > 1 {
@@ -188,6 +189,7 @@ func (t *TableResource) SetPartitionBy(partitionBy []interface{}) {
 		partitionByResource := PartitionByResource{
 			By:                partitionBy.(map[string]interface{})["by"].(string),
 			PartitionFunction: partitionBy.(map[string]interface{})["partition_function"].(string),
+			Mod:               partitionBy.(map[string]interface{})["mod"].(string),
 		}
 		t.PartitionBy = append(t.PartitionBy, partitionByResource)
 	}

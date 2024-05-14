@@ -43,8 +43,10 @@ func buildPartitionBySentence(partitionBy []PartitionByResource) string {
 		for _, partitionByItem := range partitionBy {
 			if partitionByItem.PartitionFunction == "" {
 				partitionBySentenceItems = append(partitionBySentenceItems, partitionByItem.By)
-			} else {
+			} else if partitionByItem.Mod == "" {
 				partitionBySentenceItems = append(partitionBySentenceItems, fmt.Sprintf("%v(%v)", partitionByItem.PartitionFunction, partitionByItem.By))
+			} else {
+				partitionBySentenceItems = append(partitionBySentenceItems, fmt.Sprintf("%v(%v) %% %v", partitionByItem.PartitionFunction, partitionByItem.By, partitionByItem.Mod))
 			}
 		}
 		return fmt.Sprintf("PARTITION BY (%v)", strings.Join(partitionBySentenceItems, ", "))

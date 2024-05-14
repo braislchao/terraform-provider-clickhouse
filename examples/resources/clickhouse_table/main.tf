@@ -49,7 +49,7 @@ resource "clickhouse_table" "replicated_table" {
 resource "clickhouse_table" "t2" {
   database      = "default"
   name          = "Replicated_test"
-  engine        = "MergeTree"
+  engine        = "ReplacingMergeTree"
   engine_params = []
   comment = "hi!"
   cluster = "main"
@@ -76,6 +76,13 @@ resource "clickhouse_table" "t2" {
   order_by = ["event_date", "event_type"]
   partition_by {
     by = "event_date"
+    partition_function = "sipHash64"
+    mod = "1000"
+  }
+  partition_by {
+    by = "event_type"
+    partition_function = "sipHash64"
+
   }
   index {
     name = "test_index"
