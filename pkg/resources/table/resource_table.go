@@ -121,6 +121,18 @@ func ResourceTable() *schema.Resource {
 							Optional:    true,
 							ForceNew:    true,
 						},
+						"default_kind": {
+							Description: "Column Default Kind",
+							Type:        schema.TypeString,
+							Optional:    true,
+							ForceNew:    true,
+						},
+						"default_expression": {
+							Description: "Column Default Expression",
+							Type:        schema.TypeString,
+							Optional:    true,
+							ForceNew:    true,
+						},
 					},
 				},
 			},
@@ -250,9 +262,11 @@ func getColumns(columns []ColumnDefinition) []map[string]interface{} {
 
 	for _, column := range columns {
 		ret = append(ret, map[string]interface{}{
-			"name":    column.Name,
-			"type":    column.Type,
-			"comment": column.Comment,
+			"name":               column.Name,
+			"type":               column.Type,
+			"comment":            column.Comment,
+			"default_kind":       column.DefaultKind,
+			"default_expression": column.DefaultExpression,
 		})
 	}
 	return ret
@@ -261,9 +275,11 @@ func getColumns(columns []ColumnDefinition) []map[string]interface{} {
 func (t *TableResource) setColumns(columns []interface{}) {
 	for _, column := range columns {
 		columnDefinition := ColumnDefinition{
-			Name:    column.(map[string]interface{})["name"].(string),
-			Type:    column.(map[string]interface{})["type"].(string),
-			Comment: column.(map[string]interface{})["comment"].(string),
+			Name:              column.(map[string]interface{})["name"].(string),
+			Type:              column.(map[string]interface{})["type"].(string),
+			Comment:           column.(map[string]interface{})["comment"].(string),
+			DefaultKind:       column.(map[string]interface{})["default_kind"].(string),
+			DefaultExpression: column.(map[string]interface{})["default_expression"].(string),
 		}
 		t.Columns = append(t.Columns, columnDefinition)
 	}

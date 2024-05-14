@@ -28,11 +28,13 @@ type CHIndex struct {
 }
 
 type CHColumn struct {
-	Database string `ch:"database"`
-	Table    string `ch:"table"`
-	Name     string `ch:"name"`
-	Type     string `ch:"type"`
-	Comment  string `ch:"comment"`
+	Database          string `ch:"database"`
+	Table             string `ch:"table"`
+	Name              string `ch:"name"`
+	Type              string `ch:"type"`
+	Comment           string `ch:"comment"`
+	DefaultKind       string `ch:"default_kind"`
+	DefaultExpression string `ch:"default_expression"`
 }
 
 // -- end DB read() types --
@@ -61,9 +63,11 @@ type IndexDefinition struct {
 }
 
 type ColumnDefinition struct {
-	Name    string `json:"name"`
-	Type    string `json:"type"`
-	Comment string `json:"comment"`
+	Name              string `json:"name"`
+	Type              string `json:"type"`
+	Comment           string `json:"comment"`
+	DefaultKind       string `json:"default_kind"`
+	DefaultExpression string `json:"default_expression"`
 }
 
 type PartitionByResource struct {
@@ -92,9 +96,11 @@ func (t *CHTable) ColumnsToResource() []ColumnDefinition {
 	var columnResources []ColumnDefinition
 	for _, column := range t.Columns {
 		columnResource := ColumnDefinition{
-			Name:    column.Name,
-			Type:    column.Type,
-			Comment: column.Comment,
+			Name:              column.Name,
+			Type:              column.Type,
+			Comment:           column.Comment,
+			DefaultKind:       column.DefaultKind,
+			DefaultExpression: column.DefaultExpression,
 		}
 		columnResources = append(columnResources, columnResource)
 	}
@@ -176,9 +182,11 @@ func (t *TableResource) GetColumnsResourceList() []ColumnDefinition {
 	var columnResources []ColumnDefinition
 	for _, column := range t.Columns {
 		columnResources = append(columnResources, ColumnDefinition{
-			Name:    column.Name,
-			Type:    column.Type,
-			Comment: column.Comment,
+			Name:              column.Name,
+			Type:              column.Type,
+			Comment:           column.Comment,
+			DefaultKind:       column.DefaultKind,
+			DefaultExpression: column.DefaultExpression,
 		})
 	}
 	return columnResources

@@ -90,7 +90,7 @@ func (ts *CHTableService) getTableIndexes(ctx context.Context, database string, 
 
 func (ts *CHTableService) getTableColumns(ctx context.Context, database string, table string) ([]CHColumn, error) {
 	query := fmt.Sprintf(
-		"SELECT database, table, name, type, comment FROM system.columns WHERE database = '%s' AND table = '%s'",
+		"SELECT database, table, name, type, comment, default_kind, default_expression FROM system.columns WHERE database = '%s' AND table = '%s'",
 		database,
 		table,
 	)

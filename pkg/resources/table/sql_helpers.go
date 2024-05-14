@@ -13,7 +13,7 @@ import (
 func buildColumnsSentence(cols []ColumnDefinition) []string {
 	outColumn := make([]string, 0)
 	for _, col := range cols {
-		outColumn = append(outColumn, fmt.Sprintf("\t `%s` %s %s", col.Name, col.Type, getComment(col.Comment)))
+		outColumn = append(outColumn, fmt.Sprintf("\t `%s` %s %s %s %s", col.Name, col.Type, col.DefaultKind, col.DefaultExpression, getComment(col.Comment)))
 	}
 	return outColumn
 }
