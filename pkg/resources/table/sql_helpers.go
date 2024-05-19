@@ -7,10 +7,17 @@ import (
 	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
 )
 
+func getDefaultExpression(expression string) string {
+	if expression != "" {
+		return fmt.Sprintf("'%s'", expression)
+	}
+	return ""
+}
+
 func buildColumnsSentence(cols []ColumnDefinition) []string {
 	outColumn := make([]string, 0)
 	for _, col := range cols {
-		outColumn = append(outColumn, fmt.Sprintf("\t `%s` %s %s %s %s", col.Name, col.Type, col.DefaultKind, col.DefaultExpression, getComment(col.Comment)))
+		outColumn = append(outColumn, fmt.Sprintf("\t `%s` %s %s %s %s", col.Name, col.Type, col.DefaultKind, getDefaultExpression(col.DefaultExpression), getComment(col.Comment)))
 	}
 	return outColumn
 }

@@ -75,7 +75,7 @@ resource "clickhouse_table" "t2" {
     name = "article.title"
     type = "String"
         default_kind = "DEFAULT"
-    default_expression = "5"
+    default_expression = "yo"
 
   }
   order_by = ["event_date", "event_type"]
