@@ -92,6 +92,13 @@ func (t *CHTable) IndexesToResource() []IndexDefinition {
 	return indexResources
 }
 
+func unwrapSingleQuotes(s string) string {
+	if len(s) > 1 {
+		return s[1 : len(s)-1]
+	}
+	return s
+}
+
 func (t *CHTable) ColumnsToResource() []ColumnDefinition {
 	var columnResources []ColumnDefinition
 	for _, column := range t.Columns {
@@ -100,7 +107,7 @@ func (t *CHTable) ColumnsToResource() []ColumnDefinition {
 			Type:              column.Type,
 			Comment:           column.Comment,
 			DefaultKind:       column.DefaultKind,
-			DefaultExpression: column.DefaultExpression,
+			DefaultExpression: unwrapSingleQuotes(column.DefaultExpression),
 		}
 		columnResources = append(columnResources, columnResource)
 	}
