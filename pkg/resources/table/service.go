@@ -44,6 +44,15 @@ func (ts *CHTableService) UpdateColumns(ctx context.Context, addColumns []interf
 	return nil
 }
 
+func copyToMap(iface interface{}) map[string]interface{} {
+	mapCopy := iface.(map[string]interface{})
+	mapNew := make(map[string]interface{})
+	for k, v := range mapCopy {
+		mapNew[k] = v
+	}
+	return mapNew
+}
+
 func (ts *CHTableService) UpdateTable(ctx context.Context, table TableResource, resourceData *schema.ResourceData) error {
 	if resourceData.HasChange("comment") {
 		query := fmt.Sprintf("ALTER TABLE %s.%s MODIFY COMMENT '%s'", table.Database, table.Name, table.Comment)
@@ -75,17 +84,13 @@ func (ts *CHTableService) UpdateTable(ctx context.Context, table TableResource, 
 
 		location := "FIRST"
 		for _, column := range newColumns {
-			columnMap := column.(map[string]interface{})
-			columnMapCopy := make(map[string]interface{})
-			for k, v := range columnMap {
-				columnMapCopy[k] = v
-			}
-			columnMapCopy["location"] = location
+			columnMap := copyToMap(column)
+			columnMap["location"] = location
 
-			if _, exists := oldColumnsMap[columnMapCopy["name"].(string)]; !exists {
-				columnsToAdd = append(columnsToAdd, columnMapCopy)
+			if _, exists := oldColumnsMap[columnMap["name"].(string)]; !exists {
+				columnsToAdd = append(columnsToAdd, columnMap)
 			}
-			location = "AFTER " + columnMapCopy["name"].(string)
+			location = "AFTER " + columnMap["name"].(string)
 		}
 
 		for _, column := range oldColumns {
