@@ -111,6 +111,18 @@ func (ts *CHTableService) UpdateTable(ctx context.Context, table TableResource, 
 				}
 			}
 		}
+		// TODO diff
+
+		if len(columnsToDrop) > 0 {
+			for _, column := range columnsToDrop {
+				columnMap := column.(map[string]interface{})
+				query := fmt.Sprintf("ALTER TABLE %s.%s DROP COLUMN %s", table.Database, table.Name, columnMap["name"])
+				err := (*ts.CHConnection).Exec(ctx, query)
+				if err != nil {
+					return fmt.Errorf("dropping columns from Clickhouse table: %v", err)
+				}
+			}
+		}
 
 	}
 	return nil
