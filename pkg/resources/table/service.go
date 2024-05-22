@@ -100,8 +100,17 @@ func (ts *CHTableService) UpdateTable(ctx context.Context, table TableResource, 
 			}
 		}
 
-		fmt.Println("columnsToAdd", columnsToAdd)
-		fmt.Println("columnsToDrop", columnsToDrop)
+		if len(columnsToAdd) > 0 {
+			for _, column := range columnsToAdd {
+				columnMap := column.(map[string]interface{})
+				query := fmt.Sprintf("ALTER TABLE %s.%s ADD COLUMN %s %s %s %s %s", table.Database, table.Name, columnMap["name"], columnMap["type"], columnMap["default_kind"], columnMap["default_expression"], getComment(columnMap["comment"].(string)))
+				fmt.Println(query)
+				err := (*ts.CHConnection).Exec(ctx, query)
+				if err != nil {
+					return fmt.Errorf("adding columns to Clickhouse table: %v", err)
+				}
+			}
+		}
 
 	}
 	return nil
