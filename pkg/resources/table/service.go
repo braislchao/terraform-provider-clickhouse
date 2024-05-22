@@ -110,6 +110,13 @@ func (ts *CHTableService) UpdateTable(ctx context.Context, table TableResource, 
 						return fmt.Errorf("modifying columns in Clickhouse table: %v", err)
 					}
 				}
+				if oldColumn["default_kind"] != columnMap["default_kind"] || oldColumn["default_expression"] != columnMap["default_expression"] {
+					query := fmt.Sprintf("ALTER TABLE %s.%s MODIFY COLUMN %s %s %s", table.Database, table.Name, columnMap["name"], columnMap["default_kind"], columnMap["default_expression"])
+					err := (*ts.CHConnection).Exec(ctx, query)
+					if err != nil {
+						return fmt.Errorf("modifying columns in Clickhouse table: %v", err)
+					}
+				}
 			}
 
 			location = "AFTER " + columnMap["name"].(string)
