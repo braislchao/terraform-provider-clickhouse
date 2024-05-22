@@ -13,6 +13,42 @@ type CHTableService struct {
 	CHConnection *driver.Conn
 }
 
+// err := chTableService.UpdateComment(context.Background(), tableResource)
+//
+//	func (ts *CHTableService) UpdateComment(ctx context.Context, tableResource TableResource) error {
+//		chTableService.UpdateColumns(context.Background(), addColumns, dropColumns)
+
+func (ts *CHTableService) UpdateColumns(ctx context.Context, addColumns []interface{}, dropColumns []interface{}) error {
+	// init empty erray of queries
+	// querys := []string{}
+	// // for each addColumn
+	// // for _, addColumn := range addColumns {
+	// // 	query := fmt.Sprintf("ALTER TABLE %s.%s ADD COLUMN %s", addColumn[0][
+
+	// if len(addColumns) > 0 {
+	// 	query := fmt.Sprintf("ALTER TABLE %s.%s ADD COLUMN %s", addColumns[0], addColumns[1], addColumns[2])
+	// 	// fmt.
+	// 	// err := (*ts.CHConnection).Exec(ctx, query)
+	// 	// if err != nil {
+	// 	// 	return fmt.Errorf("adding columns to Clickhouse table: %v", err)
+	// 	// }
+	// }
+	// if len(dropColumns) > 0 {
+	// 	query := fmt.Sprintf("ALTER TABLE %s.%s DROP COLUMN %s", dropColumns[0], dropColumns[1], dropColumns[2])
+	// 	// err := (*ts.CHConnection).Exec(ctx, query)
+	// 	// if err != nil {
+	// 	// 	return fmt.Errorf("dropping columns from Clickhouse table: %v", err)
+	// 	// }
+	// }
+	return nil
+}
+
+func (ts *CHTableService) UpdateTableComment(ctx context.Context, table TableResource) error {
+	query := fmt.Sprintf("ALTER TABLE %s.%s MODIFY COMMENT '%s'", table.Database, table.Name, table.Comment)
+	err := (*ts.CHConnection).Exec(ctx, query)
+	return err
+}
+
 func (ts *CHTableService) GetDBTables(ctx context.Context, database string) ([]CHTable, error) {
 	query := fmt.Sprintf("SELECT database, name FROM system.tables where database = '%s'", database)
 	rows, err := (*ts.CHConnection).Query(ctx, query)

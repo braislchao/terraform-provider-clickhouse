@@ -16,6 +16,7 @@ func ResourceTable() *schema.Resource {
 		CreateContext: resourceTableCreate,
 		ReadContext:   resourceTableRead,
 		DeleteContext: resourceTableDelete,
+		UpdateContext: resourceTableUpdate,
 		Schema: map[string]*schema.Schema{
 			"database": {
 				Description: "DB Name where the table will bellow",
@@ -27,7 +28,6 @@ func ResourceTable() *schema.Resource {
 				Description: "Database comment, it will be codified in a json along with come metadata information (like cluster name in case of clustering)",
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew:    true,
 			},
 			"name": {
 				Description: "Table Name",
@@ -100,38 +100,32 @@ func ResourceTable() *schema.Resource {
 				Description: "Column",
 				Type:        schema.TypeList,
 				Optional:    true,
-				ForceNew:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Description: "Column Name",
 							Type:        schema.TypeString,
 							Required:    true,
-							ForceNew:    true,
 						},
 						"type": {
 							Description: "Column Type",
 							Type:        schema.TypeString,
 							Required:    true,
-							ForceNew:    true,
 						},
 						"comment": {
 							Description: "Column Comment",
 							Type:        schema.TypeString,
 							Optional:    true,
-							ForceNew:    true,
 						},
 						"default_kind": {
 							Description: "Column Default Kind",
 							Type:        schema.TypeString,
 							Optional:    true,
-							ForceNew:    true,
 						},
 						"default_expression": {
 							Description: "Column Default Expression",
 							Type:        schema.TypeString,
 							Optional:    true,
-							ForceNew:    true,
 						},
 					},
 				},
@@ -358,3 +352,97 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 	return diags
 }
+
+func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if d.HasChange("comment") {
+		client := meta.(*common.ApiClient)
+		conn := client.ClickhouseConnection
+		chTableService := CHTableService{CHConnection: conn}
+
+		database := d.Get("database").(string)
+		tableName := d.Get("name").(string)
+		cluster := d.Get("cluster").(string)
+
+		newComment := d.Get("comment").(string)
+		comment := common.GetComment(newComment, cluster, nil)
+
+		tableResource := TableResource{
+			Database: database,
+			Name:     tableName,
+			Cluster:  cluster,
+			Comment:  comment,
+		}
+
+		err := chTableService.UpdateTableComment(ctx, tableResource)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	return diags
+}
+
+// func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+
+// 	var diags diag.Diagnostics
+
+// 	client := meta.(*common.ApiClient)
+// 	conn := client.ClickhouseConnection
+// 	chTableService := CHTableService{CHConnection: conn}
+
+// 	if d.HasChange("column") {
+// 		old, new := d.GetChange("column")
+
+// 		oldColumns := old.([]interface{})
+// 		newColumns := new.([]interface{})
+
+// 		addColumns := make([]interface{}, 0)
+// 		dropColumns := make([]interface{}, 0)
+
+// 		oldColumnsMap := make(map[string]map[string]interface{})
+// 		for _, column := range oldColumns {
+// 			columnMap := column.(map[string]interface{})
+// 			columnName := columnMap["name"].(string)
+// 			oldColumnsMap[columnName] = columnMap
+// 		}
+// 		newColumnsMap := make(map[string]map[string]interface{})
+// 		location := "FIRST"
+
+// 		for _, column := range newColumns {
+// 			columnMap := column.(map[string]interface{})
+// 			columnMap["location"] = location
+// 			columnName := columnMap["name"].(string)
+// 			newColumnsMap[columnName] = columnMap
+// 			location = "AFTER " + columnName
+// 		}
+
+// 		for _, column := range newColumns {
+// 			columnMap := column.(map[string]interface{})
+// 			columnName := columnMap["name"].(string)
+
+// 			if _, exists := oldColumnsMap[columnName]; !exists {
+// 				addColumns = append(addColumns, columnMap)
+// 			}
+// 		}
+
+// 		for _, column := range oldColumns {
+// 			columnMap := column.(map[string]interface{})
+// 			columnName := columnMap["name"].(string)
+
+// 			if _, exists := newColumnsMap[columnName]; !exists {
+// 				dropColumns = append(dropColumns, column)
+// 			}
+// 		}
+// 		fmt.Println("Add columns:", addColumns)
+// 		fmt.Println("Drop columns:", dropColumns)
+
+// 		err := chTableService.UpdateColumns(context.Background(), addColumns, dropColumns)
+// 		if err != nil {
+// 			return diag.FromErr(fmt.Errorf("updating columns in Clickhouse table: %v", err))
+// 		}
+// 	}
+
+// 	return diags
+// }
