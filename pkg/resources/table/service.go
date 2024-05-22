@@ -67,20 +67,25 @@ func (ts *CHTableService) UpdateTable(ctx context.Context, table TableResource, 
 		}
 
 		newColumnsMap := make(map[string]map[string]interface{})
-		// location := "FIRST"
 		for _, column := range newColumns {
 			columnMap := column.(map[string]interface{})
-			// columnMap["location"] = location
 			columnName := columnMap["name"].(string)
 			newColumnsMap[columnName] = columnMap
-			// location = "AFTER " + columnName
 		}
 
+		location := "FIRST"
 		for _, column := range newColumns {
 			columnMap := column.(map[string]interface{})
-			if _, exists := oldColumnsMap[columnMap["name"].(string)]; !exists {
-				columnsToAdd = append(columnsToAdd, columnMap)
+			columnMapCopy := make(map[string]interface{})
+			for k, v := range columnMap {
+				columnMapCopy[k] = v
 			}
+			columnMapCopy["location"] = location
+
+			if _, exists := oldColumnsMap[columnMapCopy["name"].(string)]; !exists {
+				columnsToAdd = append(columnsToAdd, columnMapCopy)
+			}
+			location = "AFTER " + columnMapCopy["name"].(string)
 		}
 
 		for _, column := range oldColumns {
