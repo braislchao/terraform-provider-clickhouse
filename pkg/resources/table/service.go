@@ -7,6 +7,7 @@ import (
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type CHTableService struct {
@@ -43,10 +44,15 @@ func (ts *CHTableService) UpdateColumns(ctx context.Context, addColumns []interf
 	return nil
 }
 
-func (ts *CHTableService) UpdateTableComment(ctx context.Context, table TableResource) error {
-	query := fmt.Sprintf("ALTER TABLE %s.%s MODIFY COMMENT '%s'", table.Database, table.Name, table.Comment)
-	err := (*ts.CHConnection).Exec(ctx, query)
-	return err
+func (ts *CHTableService) UpdateTable(ctx context.Context, table TableResource, resourceData *schema.ResourceData) error {
+	if resourceData.HasChange("comment") {
+		query := fmt.Sprintf("ALTER TABLE %s.%s MODIFY COMMENT '%s'", table.Database, table.Name, table.Comment)
+		err := (*ts.CHConnection).Exec(ctx, query)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (ts *CHTableService) GetDBTables(ctx context.Context, database string) ([]CHTable, error) {

@@ -356,29 +356,27 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if d.HasChange("comment") {
-		client := meta.(*common.ApiClient)
-		conn := client.ClickhouseConnection
-		chTableService := CHTableService{CHConnection: conn}
+	client := meta.(*common.ApiClient)
+	conn := client.ClickhouseConnection
+	chTableService := CHTableService{CHConnection: conn}
 
-		database := d.Get("database").(string)
-		tableName := d.Get("name").(string)
-		cluster := d.Get("cluster").(string)
+	database := d.Get("database").(string)
+	tableName := d.Get("name").(string)
+	cluster := d.Get("cluster").(string)
 
-		newComment := d.Get("comment").(string)
-		comment := common.GetComment(newComment, cluster, nil)
+	newComment := d.Get("comment").(string)
+	comment := common.GetComment(newComment, cluster, nil)
 
-		tableResource := TableResource{
-			Database: database,
-			Name:     tableName,
-			Cluster:  cluster,
-			Comment:  comment,
-		}
+	tableResource := TableResource{
+		Database: database,
+		Name:     tableName,
+		Cluster:  cluster,
+		Comment:  comment,
+	}
 
-		err := chTableService.UpdateTableComment(ctx, tableResource)
-		if err != nil {
-			return diag.FromErr(err)
-		}
+	err := chTableService.UpdateTable(ctx, tableResource, d)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	return diags
