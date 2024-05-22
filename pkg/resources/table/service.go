@@ -68,6 +68,7 @@ func (ts *CHTableService) UpdateTable(ctx context.Context, table TableResource, 
 		oldColumns := old.([]interface{})
 		newColumns := new.([]interface{})
 
+		// lookup map
 		oldColumnsMap := make(map[string]map[string]interface{})
 		for _, column := range oldColumns {
 			columnMap := column.(map[string]interface{})
@@ -75,6 +76,7 @@ func (ts *CHTableService) UpdateTable(ctx context.Context, table TableResource, 
 			oldColumnsMap[columnName] = columnMap
 		}
 
+		// lookup map
 		newColumnsMap := make(map[string]map[string]interface{})
 		for _, column := range newColumns {
 			columnMap := column.(map[string]interface{})
@@ -82,6 +84,7 @@ func (ts *CHTableService) UpdateTable(ctx context.Context, table TableResource, 
 			newColumnsMap[columnName] = columnMap
 		}
 
+		// added columns
 		location := "FIRST"
 		for _, column := range newColumns {
 			columnMap := copyToMap(column)
@@ -89,10 +92,21 @@ func (ts *CHTableService) UpdateTable(ctx context.Context, table TableResource, 
 
 			if _, exists := oldColumnsMap[columnMap["name"].(string)]; !exists {
 				columnsToAdd = append(columnsToAdd, columnMap)
+			} else {
+				oldColumn := oldColumnsMap[columnMap["name"].(string)]
+				if oldColumn["type"] != columnMap["type"] {
+					query := fmt.Sprintf("ALTER TABLE %s.%s MODIFY COLUMN %s %s", table.Database, table.Name, columnMap["name"], columnMap["type"])
+					err := (*ts.CHConnection).Exec(ctx, query)
+					if err != nil {
+						return fmt.Errorf("modifying columns in Clickhouse table: %v", err)
+					}
+				}
 			}
+
 			location = "AFTER " + columnMap["name"].(string)
 		}
 
+		// dropped columns
 		for _, column := range oldColumns {
 			columnMap := column.(map[string]interface{})
 			if _, exists := newColumnsMap[columnMap["name"].(string)]; !exists {
