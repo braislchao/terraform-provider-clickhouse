@@ -52,6 +52,48 @@ func (ts *CHTableService) UpdateTable(ctx context.Context, table TableResource, 
 			return err
 		}
 	}
+	if resourceData.HasChange("column") {
+		columnsToAdd := make([]interface{}, 0)
+		columnsToDrop := make([]interface{}, 0)
+		old, new := resourceData.GetChange("column")
+		oldColumns := old.([]interface{})
+		newColumns := new.([]interface{})
+
+		oldColumnsMap := make(map[string]map[string]interface{})
+		for _, column := range oldColumns {
+			columnMap := column.(map[string]interface{})
+			columnName := columnMap["name"].(string)
+			oldColumnsMap[columnName] = columnMap
+		}
+
+		newColumnsMap := make(map[string]map[string]interface{})
+		// location := "FIRST"
+		for _, column := range newColumns {
+			columnMap := column.(map[string]interface{})
+			// columnMap["location"] = location
+			columnName := columnMap["name"].(string)
+			newColumnsMap[columnName] = columnMap
+			// location = "AFTER " + columnName
+		}
+
+		for _, column := range newColumns {
+			columnMap := column.(map[string]interface{})
+			if _, exists := oldColumnsMap[columnMap["name"].(string)]; !exists {
+				columnsToAdd = append(columnsToAdd, columnMap)
+			}
+		}
+
+		for _, column := range oldColumns {
+			columnMap := column.(map[string]interface{})
+			if _, exists := newColumnsMap[columnMap["name"].(string)]; !exists {
+				columnsToDrop = append(columnsToDrop, column)
+			}
+		}
+
+		fmt.Println("columnsToAdd", columnsToAdd)
+		fmt.Println("columnsToDrop", columnsToDrop)
+
+	}
 	return nil
 }
 

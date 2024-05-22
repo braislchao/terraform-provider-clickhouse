@@ -360,19 +360,13 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := client.ClickhouseConnection
 	chTableService := CHTableService{CHConnection: conn}
 
-	database := d.Get("database").(string)
-	tableName := d.Get("name").(string)
-	cluster := d.Get("cluster").(string)
+	tableResource := TableResource{}
 
-	newComment := d.Get("comment").(string)
-	comment := common.GetComment(newComment, cluster, nil)
-
-	tableResource := TableResource{
-		Database: database,
-		Name:     tableName,
-		Cluster:  cluster,
-		Comment:  comment,
-	}
+	tableResource.Database = d.Get("database").(string)
+	tableResource.Name = d.Get("name").(string)
+	tableResource.Cluster = d.Get("cluster").(string)
+	tableResource.setColumns(d.Get("column").([]interface{}))
+	tableResource.Comment = common.GetComment(d.Get("comment").(string), tableResource.Cluster, nil)
 
 	err := chTableService.UpdateTable(ctx, tableResource, d)
 	if err != nil {
@@ -381,66 +375,3 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	return diags
 }
-
-// func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-
-// 	var diags diag.Diagnostics
-
-// 	client := meta.(*common.ApiClient)
-// 	conn := client.ClickhouseConnection
-// 	chTableService := CHTableService{CHConnection: conn}
-
-// 	if d.HasChange("column") {
-// 		old, new := d.GetChange("column")
-
-// 		oldColumns := old.([]interface{})
-// 		newColumns := new.([]interface{})
-
-// 		addColumns := make([]interface{}, 0)
-// 		dropColumns := make([]interface{}, 0)
-
-// 		oldColumnsMap := make(map[string]map[string]interface{})
-// 		for _, column := range oldColumns {
-// 			columnMap := column.(map[string]interface{})
-// 			columnName := columnMap["name"].(string)
-// 			oldColumnsMap[columnName] = columnMap
-// 		}
-// 		newColumnsMap := make(map[string]map[string]interface{})
-// 		location := "FIRST"
-
-// 		for _, column := range newColumns {
-// 			columnMap := column.(map[string]interface{})
-// 			columnMap["location"] = location
-// 			columnName := columnMap["name"].(string)
-// 			newColumnsMap[columnName] = columnMap
-// 			location = "AFTER " + columnName
-// 		}
-
-// 		for _, column := range newColumns {
-// 			columnMap := column.(map[string]interface{})
-// 			columnName := columnMap["name"].(string)
-
-// 			if _, exists := oldColumnsMap[columnName]; !exists {
-// 				addColumns = append(addColumns, columnMap)
-// 			}
-// 		}
-
-// 		for _, column := range oldColumns {
-// 			columnMap := column.(map[string]interface{})
-// 			columnName := columnMap["name"].(string)
-
-// 			if _, exists := newColumnsMap[columnName]; !exists {
-// 				dropColumns = append(dropColumns, column)
-// 			}
-// 		}
-// 		fmt.Println("Add columns:", addColumns)
-// 		fmt.Println("Drop columns:", dropColumns)
-
-// 		err := chTableService.UpdateColumns(context.Background(), addColumns, dropColumns)
-// 		if err != nil {
-// 			return diag.FromErr(fmt.Errorf("updating columns in Clickhouse table: %v", err))
-// 		}
-// 	}
-
-// 	return diags
-// }
