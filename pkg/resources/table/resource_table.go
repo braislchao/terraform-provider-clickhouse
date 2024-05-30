@@ -50,7 +50,7 @@ func ResourceTable() *schema.Resource {
 			"engine_params": {
 				Description: "Engine params in case the engine type requires them",
 				Type:        schema.TypeList,
-				Required:    true,
+				Optional:    true,
 				ForceNew:    true,
 				Elem: &schema.Schema{
 					Type:     schema.TypeString,
@@ -205,30 +205,40 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if err := d.Set("database", tableResource.Database); err != nil {
 		return diag.FromErr(fmt.Errorf("setting database: %v", err))
 	}
-	if err := d.Set("comment", tableResource.Comment); err != nil {
-		return diag.FromErr(fmt.Errorf("setting comment: %v", err))
+	if tableResource.Comment != "" {
+		if err := d.Set("comment", tableResource.Comment); err != nil {
+			return diag.FromErr(fmt.Errorf("setting comment: %v", err))
+		}
 	}
 	if err := d.Set("name", tableResource.Name); err != nil {
 		return diag.FromErr(fmt.Errorf("setting name: %v", err))
 	}
-	if err := d.Set("cluster", tableResource.Cluster); err != nil {
-		return diag.FromErr(fmt.Errorf("setting cluster: %v", err))
+	if tableResource.Cluster != "" {
+		if err := d.Set("cluster", tableResource.Cluster); err != nil {
+			return diag.FromErr(fmt.Errorf("setting cluster: %v", err))
+		}
 	}
 	if err := d.Set("engine", tableResource.Engine); err != nil {
 		return diag.FromErr(fmt.Errorf("setting engine: %v", err))
 	}
-	if err := d.Set("engine_params", tableResource.EngineParams); err != nil {
-		return diag.FromErr(fmt.Errorf("setting engine_params: %v", err))
+	if tableResource.EngineParams != nil {
+		if err := d.Set("engine_params", tableResource.EngineParams); err != nil {
+			return diag.FromErr(fmt.Errorf("setting engine_params: %v", err))
+		}
 	}
-	if err := d.Set("order_by", tableResource.OrderBy); err != nil {
-		return diag.FromErr(fmt.Errorf("setting order_by: %v", err))
+	if tableResource.OrderBy != nil {
+		if err := d.Set("order_by", tableResource.OrderBy); err != nil {
+			return diag.FromErr(fmt.Errorf("setting order_by: %v", err))
+		}
 	}
 	// not set - partition_by
 	if err := d.Set("column", getColumns(tableResource.Columns)); err != nil {
 		return diag.FromErr(fmt.Errorf("setting column: %v", err))
 	}
-	if err := d.Set("index", getIndexes(tableResource.Indexes)); err != nil {
-		return diag.FromErr(fmt.Errorf("setting indexes: %v", err))
+	if tableResource.Indexes != nil {
+		if err := d.Set("index", getIndexes(tableResource.Indexes)); err != nil {
+			return diag.FromErr(fmt.Errorf("setting indexes: %v", err))
+		}
 	}
 	// not set - settings
 
