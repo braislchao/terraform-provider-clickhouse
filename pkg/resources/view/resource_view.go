@@ -73,8 +73,6 @@ func ResourceView() *schema.Resource {
 func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	writer := bufio.NewWriter(os.Stdout)
 
-	fmt.Fprintln(writer, "resourceViewRead!")
-
 	writer.Flush()
 
 	var diags diag.Diagnostics
@@ -84,22 +82,17 @@ func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	database := d.Get("database").(string)
 	viewName := d.Get("name").(string)
-	fmt.Println("name", viewName)
 
 	chViewService := CHViewService{CHConnection: conn}
 	chView, err := chViewService.GetView(ctx, database, viewName)
-	fmt.Println("resource", chView, err)
 	if chView == nil && err == nil {
-		fmt.Println("no view found")
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		fmt.Println("error", err)
 		return diag.FromErr(fmt.Errorf("reading Clickhouse view: %v", err))
 	}
-	fmt.Println("view found")
 
 	viewResource, err := chView.ToResource()
 	if err != nil {
