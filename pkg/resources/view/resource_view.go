@@ -69,6 +69,7 @@ func ResourceView() *schema.Resource {
 }
 
 func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	fmt.Println("resourceViewRead")
 	var diags diag.Diagnostics
 
 	client := meta.(*common.ApiClient)
@@ -76,22 +77,22 @@ func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	database := d.Get("database").(string)
 	viewName := d.Get("name").(string)
-	fmt.Println("resourceViewRead", viewName)
+	fmt.Println("name", viewName)
 
 	chViewService := CHViewService{CHConnection: conn}
 	chView, err := chViewService.GetView(ctx, database, viewName)
-	fmt.Println("resourceViewRead", chView, err)
+	fmt.Println("resource", chView, err)
 	if chView == nil && err == nil {
-		fmt.Println("resourceViewRead", "no view found")
+		fmt.Println("no view found")
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		fmt.Println("resourceViewRead", "error", err)
+		fmt.Println("error", err)
 		return diag.FromErr(fmt.Errorf("reading Clickhouse view: %v", err))
 	}
-	fmt.Println("resourceViewRead", "view found")
+	fmt.Println("view found")
 
 	viewResource, err := chView.ToResource()
 	if err != nil {
