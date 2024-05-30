@@ -40,6 +40,7 @@ func ResourceView() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
+				Computed:    true,
 			},
 			"query": {
 				Description: "View query",
@@ -54,14 +55,15 @@ func ResourceView() *schema.Resource {
 				Description: "Is materialized view",
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
 				ForceNew:    true,
+				Computed:    true,
 			},
 			"to_table": {
 				Description: "For materialized view - destination table",
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
+				Computed:    true,
 			},
 		},
 	}
