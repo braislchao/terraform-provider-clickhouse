@@ -76,17 +76,22 @@ func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	database := d.Get("database").(string)
 	viewName := d.Get("name").(string)
+	fmt.Println("resourceViewRead", viewName)
 
 	chViewService := CHViewService{CHConnection: conn}
 	chView, err := chViewService.GetView(ctx, database, viewName)
+	fmt.Println("resourceViewRead", chView, err)
 	if chView == nil && err == nil {
+		fmt.Println("resourceViewRead", "no view found")
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
+		fmt.Println("resourceViewRead", "error", err)
 		return diag.FromErr(fmt.Errorf("reading Clickhouse view: %v", err))
 	}
+	fmt.Println("resourceViewRead", "view found")
 
 	viewResource, err := chView.ToResource()
 	if err != nil {
