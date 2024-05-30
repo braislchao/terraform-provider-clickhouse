@@ -54,9 +54,8 @@ func ResourceView() *schema.Resource {
 			"materialized": {
 				Description: "Is materialized view",
 				Type:        schema.TypeBool,
-				Optional:    true,
+				Required:    true,
 				ForceNew:    true,
-				Computed:    true,
 			},
 			"to_table": {
 				Description: "For materialized view - destination table",
@@ -101,8 +100,10 @@ func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return diag.FromErr(fmt.Errorf("setting name: %v", err))
 	}
 
-	if err := d.Set("cluster", viewResource.Cluster); err != nil {
-		return diag.FromErr(fmt.Errorf("setting cluster: %v", err))
+	if viewResource.Cluster != "" {
+		if err := d.Set("cluster", viewResource.Cluster); err != nil {
+			return diag.FromErr(fmt.Errorf("setting cluster: %v", err))
+		}
 	}
 	if err := d.Set("query", viewResource.Query); err != nil {
 		return diag.FromErr(fmt.Errorf("setting cluster: %v", err))
@@ -110,8 +111,10 @@ func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	if err := d.Set("materialized", viewResource.Materialized); err != nil {
 		return diag.FromErr(fmt.Errorf("setting materialized: %v", err))
 	}
-	if err := d.Set("to_table", viewResource.ToTable); err != nil {
-		return diag.FromErr(fmt.Errorf("setting to_table: %v", err))
+	if viewResource.ToTable != "" {
+		if err := d.Set("to_table", viewResource.ToTable); err != nil {
+			return diag.FromErr(fmt.Errorf("setting to_table: %v", err))
+		}
 	}
 
 	d.SetId(viewResource.Cluster + ":" + database + ":" + viewName)
