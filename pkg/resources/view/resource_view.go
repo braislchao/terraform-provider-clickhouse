@@ -1,8 +1,10 @@
 package resourceview
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -69,7 +71,12 @@ func ResourceView() *schema.Resource {
 }
 
 func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	fmt.Println("resourceViewRead!")
+	writer := bufio.NewWriter(os.Stdout)
+
+	fmt.Fprintln(writer, "resourceViewRead!")
+
+	writer.Flush()
+
 	var diags diag.Diagnostics
 
 	client := meta.(*common.ApiClient)
@@ -84,7 +91,6 @@ func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	fmt.Println("resource", chView, err)
 	if chView == nil && err == nil {
 		fmt.Println("no view found")
-		d.SetId("")
 		d.SetId("")
 		return nil
 	}
