@@ -85,6 +85,7 @@ func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	if chView == nil && err == nil {
 		fmt.Println("no view found")
 		d.SetId("")
+		d.SetId("")
 		return nil
 	}
 
