@@ -69,7 +69,7 @@ func ResourceView() *schema.Resource {
 }
 
 func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	fmt.Println("resourceViewRead")
+	fmt.Println("resourceViewRead!")
 	var diags diag.Diagnostics
 
 	client := meta.(*common.ApiClient)
