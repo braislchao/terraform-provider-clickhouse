@@ -68,7 +68,7 @@ func (ts *CHViewService) CreateView(ctx context.Context, viewResource ViewResour
 }
 
 func (ts *CHViewService) DeleteView(ctx context.Context, viewResource ViewResource) error {
-	query := fmt.Sprintf("DROP VIEW %s.%s %s", viewResource.Database, viewResource.Name, common.GetClusterStatement(viewResource.Cluster))
+	query := fmt.Sprintf("DROP VIEW if exists %s.%s %s", viewResource.Database, viewResource.Name, common.GetClusterStatement(viewResource.Cluster))
 	err := (*ts.CHConnection).Exec(ctx, query)
 	if err != nil {
 		return fmt.Errorf("deleting Clickhouse view: %v", err)
