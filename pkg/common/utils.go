@@ -78,7 +78,7 @@ func StringListToSet(list []string) *schema.Set {
 }
 
 func FormatSQL(sql string) string {
-	cmd := exec.Command("clickhouse", "format", "--oneline", "--query", sql)
+	cmd := exec.Command("clickhouse", "format", "--query", sql)
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer

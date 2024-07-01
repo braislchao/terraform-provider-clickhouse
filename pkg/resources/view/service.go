@@ -54,6 +54,9 @@ func (ts *CHViewService) GetView(ctx context.Context, database string, view stri
 	if err != nil {
 		return nil, fmt.Errorf("getting columns for Clickhouse view: %v", err)
 	}
+	// the value read from system.tables is not formatted
+	formattedQuery := common.FormatSQL(chView.Query)
+	chView.Query = formattedQuery
 
 	return &chView, nil
 }
