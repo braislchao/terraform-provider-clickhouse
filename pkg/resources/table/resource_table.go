@@ -142,6 +142,15 @@ func ResourceTable() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"ttl": {
+				Description: "Table TTL",
+				Type:        schema.TypeMap,
+				Optional:    true,
+				ForceNew:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"index": {
 				Description: "Index",
 				Type:        schema.TypeList,
@@ -323,6 +332,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	tableResource.OrderBy = common.MapArrayInterfaceToArrayOfStrings(d.Get("order_by").([]interface{}))
 	tableResource.SetPartitionBy(d.Get("partition_by").([]interface{}))
 	tableResource.Settings = common.MapInterfaceToMapOfString(d.Get("settings").(map[string]interface{}))
+	tableResource.TTL = common.MapInterfaceToMapOfString(d.Get("ttl").(map[string]interface{}))
 
 	if tableResource.Cluster == "" {
 		tableResource.Cluster = client.DefaultCluster

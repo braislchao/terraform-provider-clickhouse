@@ -43,6 +43,9 @@ func TestAccResourceTable(t *testing.T) {
 					resource.TestCheckResourceAttr("clickhouse_table.table", "column.1.type", "String"),
 					resource.TestCheckResourceAttr("clickhouse_table.table", "column.2.name", "eventTime"),
 					resource.TestCheckResourceAttr("clickhouse_table.table", "column.2.type", "DateTime"),
+					resource.TestCheckResourceAttr("clickhouse_table.table", "ttl.%", "2"),
+					resource.TestCheckResourceAttr("clickhouse_table.table", "ttl.toDateTime(eventTime)", "default"),
+					resource.TestCheckResourceAttr("clickhouse_table.table", "ttl.toDateTime(eventTime) + INTERVAL 4 HOUR", "default"),
 				),
 			},
 		},
@@ -77,6 +80,10 @@ func tableConfigWithName(database string, tableName string) string {
 		partition_by {
 			by = "eventTime"
 			partition_function = "toYYYYMM"
+		}
+		ttl = {
+			"toDateTime(eventTime)" = "default"
+			"toDateTime(eventTime) + INTERVAL 4 HOUR" = "default"
 		}
 		comment = "This is just a new table"
 }`

@@ -53,6 +53,7 @@ type TableResource struct {
 	PartitionBy  []PartitionByResource
 	Indexes      []IndexDefinition
 	Settings     map[string]string
+	TTL          map[string]string
 }
 
 type IndexDefinition struct {
