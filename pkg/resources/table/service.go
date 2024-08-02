@@ -14,36 +14,6 @@ type CHTableService struct {
 	CHConnection *driver.Conn
 }
 
-// err := chTableService.UpdateComment(context.Background(), tableResource)
-//
-//	func (ts *CHTableService) UpdateComment(ctx context.Context, tableResource TableResource) error {
-//		chTableService.UpdateColumns(context.Background(), addColumns, dropColumns)
-
-func (ts *CHTableService) UpdateColumns(ctx context.Context, addColumns []interface{}, dropColumns []interface{}) error {
-	// init empty erray of queries
-	// querys := []string{}
-	// // for each addColumn
-	// // for _, addColumn := range addColumns {
-	// // 	query := fmt.Sprintf("ALTER TABLE %s.%s ADD COLUMN %s", addColumn[0][
-
-	// if len(addColumns) > 0 {
-	// 	query := fmt.Sprintf("ALTER TABLE %s.%s ADD COLUMN %s", addColumns[0], addColumns[1], addColumns[2])
-	// 	// fmt.
-	// 	// err := (*ts.CHConnection).Exec(ctx, query)
-	// 	// if err != nil {
-	// 	// 	return fmt.Errorf("adding columns to Clickhouse table: %v", err)
-	// 	// }
-	// }
-	// if len(dropColumns) > 0 {
-	// 	query := fmt.Sprintf("ALTER TABLE %s.%s DROP COLUMN %s", dropColumns[0], dropColumns[1], dropColumns[2])
-	// 	// err := (*ts.CHConnection).Exec(ctx, query)
-	// 	// if err != nil {
-	// 	// 	return fmt.Errorf("dropping columns from Clickhouse table: %v", err)
-	// 	// }
-	// }
-	return nil
-}
-
 func copyToMap(iface interface{}) map[string]interface{} {
 	mapCopy := iface.(map[string]interface{})
 	mapNew := make(map[string]interface{})
@@ -55,85 +25,100 @@ func copyToMap(iface interface{}) map[string]interface{} {
 
 func (ts *CHTableService) UpdateTable(ctx context.Context, table TableResource, resourceData *schema.ResourceData) error {
 	clusterStatement := common.GetClusterStatement(table.Cluster)
+
 	if resourceData.HasChange("comment") {
-		query := fmt.Sprintf("ALTER TABLE %s.%s %s MODIFY COMMENT '%s'", table.Database, table.Name, clusterStatement, table.Comment)
-		err := (*ts.CHConnection).Exec(ctx, query)
+		err := executeQuery(ctx, ts, fmt.Sprintf("ALTER TABLE %s.%s %s MODIFY COMMENT '%s'", table.Database, table.Name, clusterStatement, table.Comment))
 		if err != nil {
 			return err
 		}
 	}
+
 	if resourceData.HasChange("column") {
 		old, new := resourceData.GetChange("column")
 		oldColumns := old.([]interface{})
 		newColumns := new.([]interface{})
 
-		// lookup map
-		oldColumnsMap := make(map[string]map[string]interface{})
-		for _, column := range oldColumns {
-			columnMap := column.(map[string]interface{})
-			columnName := columnMap["name"].(string)
-			oldColumnsMap[columnName] = columnMap
-		}
-
-		// lookup map
-		newColumnsMap := make(map[string]map[string]interface{})
-		for _, column := range newColumns {
-			columnMap := column.(map[string]interface{})
-			columnName := columnMap["name"].(string)
-			newColumnsMap[columnName] = columnMap
-		}
+		oldColumnsMap := createColumnsMap(oldColumns)
+		newColumnsMap := createColumnsMap(newColumns)
 
 		location := "FIRST"
 		for _, column := range newColumns {
 			columnMap := copyToMap(column)
 			columnMap["location"] = location
 
-			if _, exists := oldColumnsMap[columnMap["name"].(string)]; !exists {
-				query := fmt.Sprintf("ALTER TABLE %s.%s %s ADD COLUMN %s %s %s %s %s %s", table.Database, table.Name, clusterStatement, columnMap["name"], columnMap["type"], columnMap["default_kind"], columnMap["default_expression"], getComment(columnMap["comment"].(string)), columnMap["location"])
-				err := (*ts.CHConnection).Exec(ctx, query)
-				if err != nil {
-					return fmt.Errorf("adding columns to Clickhouse table: %v", err)
-				}
-			} else {
-				oldColumn := oldColumnsMap[columnMap["name"].(string)]
-				if oldColumn["type"] != columnMap["type"] {
-					query := fmt.Sprintf("ALTER TABLE %s.%s %s MODIFY COLUMN %s %s", table.Database, table.Name, clusterStatement, columnMap["name"], columnMap["type"])
-					err := (*ts.CHConnection).Exec(ctx, query)
-					if err != nil {
-						return fmt.Errorf("modifying columns in Clickhouse table: %v", err)
-					}
-				}
-				if oldColumn["comment"] != columnMap["comment"] {
-					query := fmt.Sprintf("ALTER TABLE %s.%s %s COMMENT COLUMN %s '%s'", table.Database, table.Name, clusterStatement, columnMap["name"], columnMap["comment"])
-					err := (*ts.CHConnection).Exec(ctx, query)
-					if err != nil {
-						return fmt.Errorf("modifying columns in Clickhouse table: %v", err)
-					}
-				}
-				if oldColumn["default_kind"] != columnMap["default_kind"] || oldColumn["default_expression"] != columnMap["default_expression"] {
-					query := fmt.Sprintf("ALTER TABLE %s.%s %s MODIFY COLUMN %s %s %s", table.Database, table.Name, clusterStatement, columnMap["name"], columnMap["default_kind"], columnMap["default_expression"])
-					err := (*ts.CHConnection).Exec(ctx, query)
-					if err != nil {
-						return fmt.Errorf("modifying columns in Clickhouse table: %v", err)
-					}
-				}
+			err := handleColumnChanges(ctx, ts, table, clusterStatement, columnMap, oldColumnsMap)
+			if err != nil {
+				return err
 			}
 
 			location = "AFTER " + columnMap["name"].(string)
 		}
 
-		for _, column := range oldColumns {
-			columnMap := column.(map[string]interface{})
-			if _, exists := newColumnsMap[columnMap["name"].(string)]; !exists {
-				query := fmt.Sprintf("ALTER TABLE %s.%s %s DROP COLUMN %s", table.Database, table.Name, clusterStatement, columnMap["name"])
-				err := (*ts.CHConnection).Exec(ctx, query)
-				if err != nil {
-					return fmt.Errorf("dropping columns from Clickhouse table: %v", err)
-				}
+		err := dropOldColumns(ctx, ts, table, clusterStatement, oldColumns, newColumnsMap)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
+func executeQuery(ctx context.Context, ts *CHTableService, query string) error {
+	err := (*ts.CHConnection).Exec(ctx, query)
+	if err != nil {
+		return fmt.Errorf("executing query: %v", err)
+	}
+	return nil
+}
+
+func createColumnsMap(columns []interface{}) map[string]map[string]interface{} {
+	columnsMap := make(map[string]map[string]interface{})
+	for _, column := range columns {
+		columnMap := column.(map[string]interface{})
+		columnName := columnMap["name"].(string)
+		columnsMap[columnName] = columnMap
+	}
+	return columnsMap
+}
+
+func handleColumnChanges(ctx context.Context, ts *CHTableService, table TableResource, clusterStatement string, columnMap map[string]interface{}, oldColumnsMap map[string]map[string]interface{}) error {
+	columnName := columnMap["name"].(string)
+	if _, exists := oldColumnsMap[columnName]; !exists {
+		return executeQuery(ctx, ts, fmt.Sprintf(
+			"ALTER TABLE %s.%s %s ADD COLUMN %s %s %s %s %s %s",
+			table.Database, table.Name, clusterStatement, columnMap["name"], columnMap["type"], columnMap["default_kind"],
+			columnMap["default_expression"], getComment(columnMap["comment"].(string)), columnMap["location"]))
+	} else {
+		oldColumn := oldColumnsMap[columnName]
+		if oldColumn["type"] != columnMap["type"] {
+			return executeQuery(ctx, ts, fmt.Sprintf(
+				"ALTER TABLE %s.%s %s MODIFY COLUMN %s %s",
+				table.Database, table.Name, clusterStatement, columnMap["name"], columnMap["type"]))
+		}
+		if oldColumn["comment"] != columnMap["comment"] {
+			return executeQuery(ctx, ts, fmt.Sprintf(
+				"ALTER TABLE %s.%s %s COMMENT COLUMN %s '%s'",
+				table.Database, table.Name, clusterStatement, columnMap["name"], columnMap["comment"]))
+		}
+		if oldColumn["default_kind"] != columnMap["default_kind"] || oldColumn["default_expression"] != columnMap["default_expression"] {
+			return executeQuery(ctx, ts, fmt.Sprintf(
+				"ALTER TABLE %s.%s %s MODIFY COLUMN %s %s %s",
+				table.Database, table.Name, clusterStatement, columnMap["name"], columnMap["default_kind"], columnMap["default_expression"]))
+		}
+	}
+	return nil
+}
+
+func dropOldColumns(ctx context.Context, ts *CHTableService, table TableResource, clusterStatement string, oldColumns []interface{}, newColumnsMap map[string]map[string]interface{}) error {
+	for _, column := range oldColumns {
+		columnMap := column.(map[string]interface{})
+		if _, exists := newColumnsMap[columnMap["name"].(string)]; !exists {
+			err := executeQuery(ctx, ts, fmt.Sprintf(
+				"ALTER TABLE %s.%s %s DROP COLUMN %s",
+				table.Database, table.Name, clusterStatement, columnMap["name"]))
+			if err != nil {
+				return fmt.Errorf("dropping columns from Clickhouse table: %v", err)
 			}
 		}
-
 	}
 	return nil
 }
