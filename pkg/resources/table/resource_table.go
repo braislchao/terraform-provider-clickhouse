@@ -57,6 +57,16 @@ func ResourceTable() *schema.Resource {
 					ForceNew: true,
 				},
 			},
+			"primary_key": {
+				Description: "Columns to use as primary key",
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:    true,
+				Elem: &schema.Schema{
+					Type:     schema.TypeString,
+					ForceNew: true,
+				},
+			},
 			"order_by": {
 				Description: "Order by columns to use as sorting key",
 				Type:        schema.TypeList,
@@ -238,6 +248,11 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 			return diag.FromErr(fmt.Errorf("setting engine_params: %v", err))
 		}
 	}
+	if tableResource.PrimaryKey != nil {
+		if err := d.Set("primary_key", tableResource.OrderBy); err != nil {
+			return diag.FromErr(fmt.Errorf("setting order_by: %v", err))
+		}
+	}
 	if tableResource.OrderBy != nil {
 		if err := d.Set("order_by", tableResource.OrderBy); err != nil {
 			return diag.FromErr(fmt.Errorf("setting order_by: %v", err))
@@ -329,6 +344,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	tableResource.Engine = d.Get("engine").(string)
 	tableResource.Comment = common.GetComment(d.Get("comment").(string), tableResource.Cluster, nil)
 	tableResource.EngineParams = common.MapArrayInterfaceToArrayOfStrings(d.Get("engine_params").([]interface{}))
+	tableResource.PrimaryKey = common.MapArrayInterfaceToArrayOfStrings(d.Get("primary_key").([]interface{}))
 	tableResource.OrderBy = common.MapArrayInterfaceToArrayOfStrings(d.Get("order_by").([]interface{}))
 	tableResource.SetPartitionBy(d.Get("partition_by").([]interface{}))
 	tableResource.Settings = common.MapInterfaceToMapOfString(d.Get("settings").(map[string]interface{}))

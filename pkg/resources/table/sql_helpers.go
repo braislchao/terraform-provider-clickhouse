@@ -50,6 +50,12 @@ func buildPartitionBySentence(partitionBy []PartitionByResource) string {
 	}
 	return ""
 }
+func buildPrimaryKeySentence(primaryKey []string) string {
+	if len(primaryKey) > 0 {
+		return fmt.Sprintf("PRIMARY KEY (%v)", strings.Join(primaryKey, ", "))
+	}
+	return ""
+}
 
 func buildOrderBySentence(orderBy []string) string {
 	if len(orderBy) > 0 {
@@ -100,7 +106,7 @@ func buildCreateOnClusterSentence(resource TableResource) (query string) {
 	clusterStatement := common.GetClusterStatement(resource.Cluster)
 
 	ret := fmt.Sprintf(
-		"CREATE TABLE %v.%v %v %v ENGINE = %v(%v) %s %s %s %s COMMENT '%s'",
+		"CREATE TABLE %v.%v %v %v ENGINE = %v(%v) %s %s %s %s %s COMMENT '%s'",
 		resource.Database,
 		resource.Name,
 		clusterStatement,
@@ -108,6 +114,7 @@ func buildCreateOnClusterSentence(resource TableResource) (query string) {
 		resource.Engine,
 		strings.Join(resource.EngineParams, ", "),
 		buildOrderBySentence(resource.OrderBy),
+		buildPrimaryKeySentence(resource.PrimaryKey),
 		buildPartitionBySentence(resource.PartitionBy),
 		buildTTLSentence(resource.TTL),
 		buildSettingsSentence(resource.Settings),

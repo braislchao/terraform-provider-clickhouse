@@ -48,6 +48,7 @@ type TableResource struct {
 	Cluster      string
 	Comment      string
 	EngineParams []string
+	PrimaryKey   []string
 	OrderBy      []string
 	Columns      []ColumnDefinition
 	PartitionBy  []PartitionByResource
