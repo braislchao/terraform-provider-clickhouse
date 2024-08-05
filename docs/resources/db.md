@@ -31,5 +31,3 @@ Resource to handle clickhouse databases.
 - `id` (String) The ID of this resource.
 - `metadata_path` (String) Database internal metadata path
 - `uuid` (String) Database UUID
-
-

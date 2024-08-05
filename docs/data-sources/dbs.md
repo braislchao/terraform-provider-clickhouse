@@ -31,5 +31,3 @@ Read-Only:
 - `metadata_path` (String)
 - `name` (String)
 - `uuid` (String)
-
-

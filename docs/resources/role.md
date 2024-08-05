@@ -27,5 +27,3 @@ Resource to manage Clickhouse roles
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-

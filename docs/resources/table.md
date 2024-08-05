@@ -78,5 +78,3 @@ Optional:
 
 - `mod` (String) Modulo to apply to the partition function
 - `partition_function` (String) Partition function, could be empty or one of following: toYYYYMM, toYYYYMMDD or toYYYYMMDDhhmmss
-
-

@@ -31,5 +31,3 @@ Resource to manage views
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-
