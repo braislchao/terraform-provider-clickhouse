@@ -130,8 +130,6 @@ func configure() func(context.Context, *schema.ResourceData) (any, diag.Diagnost
 		// Check if TF_LOG is set to DEBUG or TRACE
 		tfLogLevel := strings.ToUpper(os.Getenv("TF_LOG"))
 		debugEnabled := tfLogLevel == "DEBUG" || tfLogLevel == "TRACE"
-		println(tfLogLevel)
-		println(debugEnabled)
 
 		var TLSConfig *tls.Config
 		// To use TLS it's necessary to set the TLSConfig field as not nil
