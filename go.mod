@@ -1,6 +1,8 @@
 module github.com/FlowdeskMarkets/terraform-provider-clickhouse
 
-go 1.19
+go 1.21
+
+toolchain go1.22.5
 
 replace github.com/hashicorp/terraform-provider-scaffolding => github.com/FlowdeskMarkets/terraform-provider-clickhouse v0.1.0
 

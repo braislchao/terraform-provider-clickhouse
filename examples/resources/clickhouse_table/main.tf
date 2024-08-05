@@ -8,10 +8,10 @@ terraform {
 }
 
 provider "clickhouse" {
-  port = 9000
-  host           = "10.46.0.247"
-  username       = "sonic"
-  password       = ""
+  port     = 9000
+  host     = "10.46.0.247"
+  username = "sonic"
+  password = ""
 }
 
 /*
@@ -51,16 +51,16 @@ resource "clickhouse_table" "t2" {
   name          = "Replicated_test"
   engine        = "ReplacingMergeTree"
   engine_params = []
-  comment = "hi!"
-  cluster = "main"
+  comment       = "hi!"
+  cluster       = "main"
   column {
     name = "event_date"
     type = "Date"
   }
   column {
-    name = "event_type"
-    type = "Int32"
-    default_kind = "DEFAULT"
+    name               = "event_type"
+    type               = "Int32"
+    default_kind       = "DEFAULT"
     default_expression = 5
   }
   column {
@@ -72,27 +72,27 @@ resource "clickhouse_table" "t2" {
     type = "Int32"
   }
   column {
-    name = "article.title"
-    type = "String"
-        default_kind = "DEFAULT"
+    name               = "article.title"
+    type               = "String"
+    default_kind       = "DEFAULT"
     default_expression = "'yo'"
 
   }
   order_by = ["event_date", "event_type"]
   partition_by {
-    by = "event_date"
+    by                 = "event_date"
     partition_function = "sipHash64"
-    mod = "1000"
+    mod                = "1000"
   }
   partition_by {
-    by = "event_type"
+    by                 = "event_type"
     partition_function = "sipHash64"
 
   }
   index {
-    name = "test_index"
-    expression = "[event_type, event_type_2]"
-    type = "minmax"
+    name        = "test_index"
+    expression  = "[event_type, event_type_2]"
+    type        = "minmax"
     granularity = 10000
   }
 }
