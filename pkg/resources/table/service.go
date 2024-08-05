@@ -224,18 +224,10 @@ func (ts *CHTableService) getTableColumns(ctx context.Context, database string, 
 
 func (ts *CHTableService) CreateTable(ctx context.Context, tableResource TableResource) error {
 	query := buildCreateOnClusterSentence(tableResource)
-	err := (*ts.CHConnection).Exec(ctx, query)
-	if err != nil {
-		return fmt.Errorf("creating Clickhouse table: %v", err)
-	}
-	return nil
+	return executeQuery(ctx, ts, query)
 }
 
 func (ts *CHTableService) DeleteTable(ctx context.Context, tableResource TableResource) error {
-	query := fmt.Sprintf("DROP TABLE if exists %s.%s %s", tableResource.Database, tableResource.Name, common.GetClusterStatement(tableResource.Cluster))
-	err := (*ts.CHConnection).Exec(ctx, query)
-	if err != nil {
-		return fmt.Errorf("deleting Clickhouse table: %v", err)
-	}
-	return nil
+	query := fmt.Sprintf("DROP TABLE IF EXISTS %s.%s %s", tableResource.Database, tableResource.Name, common.GetClusterStatement(tableResource.Cluster))
+	return executeQuery(ctx, ts, query)
 }
