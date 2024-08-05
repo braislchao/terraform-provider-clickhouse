@@ -129,7 +129,7 @@ func configure() func(context.Context, *schema.ResourceData) (any, diag.Diagnost
 
 		// Check if TF_LOG is set to DEBUG or TRACE
 		tfLogLevel := strings.ToUpper(os.Getenv("TF_LOG"))
-		debugEnabled := tfLogLevel == "DEBUG" || tfLogLevel == "TRACE"
+		debugEnabled := tfLogLevel == "DEBUG" || tfLogLevel == "TRACE" || tfLogLevel == "JSON"
 
 		var TLSConfig *tls.Config
 		// To use TLS it's necessary to set the TLSConfig field as not nil
@@ -147,16 +147,7 @@ func configure() func(context.Context, *schema.ResourceData) (any, diag.Diagnost
 			Debug: debugEnabled,
 			Debugf: func(format string, v ...any) {
 				if debugEnabled {
-					cleanedFormat := strings.ReplaceAll(format, "\t", "    ")
-					cleanedArgs := make([]interface{}, len(v))
-					for i, arg := range v {
-						if str, ok := arg.(string); ok {
-							cleanedArgs[i] = strings.ReplaceAll(str, "\t", "    ")
-						} else {
-							cleanedArgs[i] = arg
-						}
-					}
-					fmt.Printf(cleanedFormat+"\n", cleanedArgs...)
+					fmt.Printf(format, v...)
 				}
 			},
 			Settings: clickhouse.Settings{
