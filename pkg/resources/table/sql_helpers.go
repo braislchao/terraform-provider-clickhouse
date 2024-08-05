@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
 )
 
 func buildColumnsSentence(cols []ColumnDefinition) []string {

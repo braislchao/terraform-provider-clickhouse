@@ -3,7 +3,7 @@ package resourceview
 import (
 	"fmt"
 
-	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
 )
 
 func buildCreateOnClusterSentence(resource ViewResource) (query string) {

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 

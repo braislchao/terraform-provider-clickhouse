@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Triple-Whale/terraform-provider-clickhouse/pkg/common"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
