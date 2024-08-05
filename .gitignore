@@ -1,3 +1,5 @@
+.envs
+
 *.dll
 *.exe
 .DS_Store
