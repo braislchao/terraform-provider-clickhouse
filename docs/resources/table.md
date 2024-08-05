@@ -19,7 +19,6 @@ Resource to manage tables
 
 - `database` (String) DB Name where the table will bellow
 - `engine` (String) Table engine type (Supported types so far: Distributed, ReplicatedReplacingMergeTree, ReplacingMergeTree)
-- `engine_params` (List of String) Engine params in case the engine type requires them
 - `name` (String) Table Name
 
 ### Optional
@@ -27,8 +26,13 @@ Resource to manage tables
 - `cluster` (String) Cluster Name, it is required for Replicated or Distributed tables and forbidden in other case
 - `column` (Block List) Column (see [below for nested schema](#nestedblock--column))
 - `comment` (String) Database comment, it will be codified in a json along with come metadata information (like cluster name in case of clustering)
+- `engine_params` (List of String) Engine params in case the engine type requires them
+- `index` (Block List) Index (see [below for nested schema](#nestedblock--index))
 - `order_by` (List of String) Order by columns to use as sorting key
 - `partition_by` (Block List) Partition Key to split data (see [below for nested schema](#nestedblock--partition_by))
+- `primary_key` (List of String) Columns to use as primary key
+- `settings` (Map of String) Table settings
+- `ttl` (Map of String) Table TTL
 
 ### Read-Only
 
@@ -42,6 +46,26 @@ Required:
 - `name` (String) Column Name
 - `type` (String) Column Type
 
+Optional:
+
+- `comment` (String) Column Comment
+- `default_expression` (String) Column Default Expression
+- `default_kind` (String) Column Default Kind
+
+
+<a id="nestedblock--index"></a>
+### Nested Schema for `index`
+
+Required:
+
+- `expression` (String) Index Expression
+- `name` (String) Index Name
+- `type` (String) Index Type
+
+Optional:
+
+- `granularity` (Number) Index Granularity
+
 
 <a id="nestedblock--partition_by"></a>
 ### Nested Schema for `partition_by`
@@ -52,6 +76,7 @@ Required:
 
 Optional:
 
+- `mod` (String) Modulo to apply to the partition function
 - `partition_function` (String) Partition function, could be empty or one of following: toYYYYMM, toYYYYMMDD or toYYYYMMDDhhmmss
 
 
