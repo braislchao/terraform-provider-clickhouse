@@ -41,7 +41,7 @@ func New(version string) func() *schema.Provider {
 	return func() *schema.Provider {
 		p := &schema.Provider{
 			Schema: map[string]*schema.Schema{
-				"default_cluster": &schema.Schema{
+				"default_cluster": {
 					Description: "Default cluster, if provided will be used when no cluster is provided",
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -127,6 +127,12 @@ func configure() func(context.Context, *schema.ResourceData) (any, diag.Diagnost
 		password := d.Get("password").(string)
 		secure := d.Get("secure").(bool)
 
+		// Check if TF_LOG is set to DEBUG or TRACE
+		tfLogLevel := strings.ToUpper(os.Getenv("TF_LOG"))
+		debugEnabled := tfLogLevel == "DEBUG" || tfLogLevel == "TRACE"
+		println(tfLogLevel)
+		println(debugEnabled)
+
 		var TLSConfig *tls.Config
 		// To use TLS it's necessary to set the TLSConfig field as not nil
 		if secure {
@@ -140,18 +146,20 @@ func configure() func(context.Context, *schema.ResourceData) (any, diag.Diagnost
 				Username: username,
 				Password: password,
 			},
-			Debug: true,
+			Debug: debugEnabled,
 			Debugf: func(format string, v ...any) {
-				cleanedFormat := strings.ReplaceAll(format, "\t", "    ")
-				cleanedArgs := make([]interface{}, len(v))
-				for i, arg := range v {
-					if str, ok := arg.(string); ok {
-						cleanedArgs[i] = strings.ReplaceAll(str, "\t", "    ")
-					} else {
-						cleanedArgs[i] = arg
+				if debugEnabled {
+					cleanedFormat := strings.ReplaceAll(format, "\t", "    ")
+					cleanedArgs := make([]interface{}, len(v))
+					for i, arg := range v {
+						if str, ok := arg.(string); ok {
+							cleanedArgs[i] = strings.ReplaceAll(str, "\t", "    ")
+						} else {
+							cleanedArgs[i] = arg
+						}
 					}
+					fmt.Printf(cleanedFormat+"\n", cleanedArgs...)
 				}
-				fmt.Printf(cleanedFormat+"\n", cleanedArgs...)
 			},
 			Settings: clickhouse.Settings{
 				"max_execution_time": 300,
