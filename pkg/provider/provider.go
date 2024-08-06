@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
@@ -127,10 +126,6 @@ func configure() func(context.Context, *schema.ResourceData) (any, diag.Diagnost
 		password := d.Get("password").(string)
 		secure := d.Get("secure").(bool)
 
-		// Check if TF_LOG is set to DEBUG or TRACE
-		tfLogLevel := strings.ToUpper(os.Getenv("TF_LOG"))
-		debugEnabled := tfLogLevel == "DEBUG" || tfLogLevel == "TRACE" || tfLogLevel == "JSON"
-
 		var TLSConfig *tls.Config
 		// To use TLS it's necessary to set the TLSConfig field as not nil
 		if secure {
@@ -144,9 +139,9 @@ func configure() func(context.Context, *schema.ResourceData) (any, diag.Diagnost
 				Username: username,
 				Password: password,
 			},
-			Debug: debugEnabled,
+			Debug: common.DebugEnabled,
 			Debugf: func(format string, v ...any) {
-				if debugEnabled {
+				if common.DebugEnabled {
 					fmt.Printf(format, v...)
 				}
 			},

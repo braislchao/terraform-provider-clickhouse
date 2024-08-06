@@ -7,6 +7,7 @@ import (
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -63,11 +64,32 @@ func (ts *CHTableService) UpdateTable(ctx context.Context, table TableResource, 
 }
 
 func executeQuery(ctx context.Context, ts *CHTableService, query string) error {
+	if common.DebugEnabled {
+		formattedQuery, err := formatQuery(ctx, ts, query)
+		if err != nil {
+			return err
+		}
+		tflog.Debug(ctx, "executing query: \n\n"+formattedQuery+"\n\n")
+	}
+
+	// Execute the query
 	err := (*ts.CHConnection).Exec(ctx, query)
 	if err != nil {
 		return fmt.Errorf("executing query: %v", err)
 	}
 	return nil
+}
+
+func formatQuery(ctx context.Context, ts *CHTableService, query string) (string, error) {
+	escapedQuery := strings.ReplaceAll(query, "'", "''")
+	formatQueryStmt := fmt.Sprintf("SELECT formatQuery('%s')", escapedQuery)
+	row := (*ts.CHConnection).QueryRow(ctx, formatQueryStmt)
+
+	var formattedQueryResult string
+	if err := row.Scan(&formattedQueryResult); err != nil {
+		return "", err
+	}
+	return formattedQueryResult, nil
 }
 
 func createColumnsMap(columns []interface{}) map[string]map[string]interface{} {
