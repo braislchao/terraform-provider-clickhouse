@@ -1,12 +1,10 @@
-name: "Creating version with semantic release on merging Issues/PRs"
-
 on:
   push:
     branches: [master]
 
 jobs:
   semantic-release:
-    name: "Add Content to project"
+    name: "Semantic release"
     runs-on: ubuntu-latest
     
     steps:
