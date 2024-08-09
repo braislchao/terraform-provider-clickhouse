@@ -39,3 +39,14 @@ website/vendor
 **/.terraform.lock.hcl
 
 /examples/resources/schema_migrations/**
+
+# local files
+.access
+clickhouse
+config.d
+metadata*
+preprocessed_configs/
+status
+store
+terraform-provider-clickhouse
+uuid
