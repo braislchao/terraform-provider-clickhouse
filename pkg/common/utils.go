@@ -1,10 +1,10 @@
 package common
 
 import (
-	"bytes"
+	"context"
+
 	"encoding/json"
 	"fmt"
-	"os/exec"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -77,22 +77,27 @@ func StringListToSet(list []string) *schema.Set {
 	return schema.NewSet(schema.HashString, set)
 }
 
-func FormatSQL(sql string) string {
-	cmd := exec.Command("clickhouse", "format", "--query", sql)
+func FormatQuery(ctx context.Context, query string, meta any) string {
+	client := meta.(*ApiClient)
+	conn := client.ClickhouseConnection
+	escapedQuery := strings.ReplaceAll(query, "'", "''")
+	formatQueryStmt := fmt.Sprintf("SELECT formatQuery('%s')", escapedQuery)
+	row := (*conn).QueryRow(ctx, formatQueryStmt)
 
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-
-	err := cmd.Run()
-
-	if err != nil {
-		return sql
+	var formattedQueryResult string
+	if err := row.Scan(&formattedQueryResult); err != nil {
+		return ""
 	}
+	return formattedQueryResult
+}
 
-	ret := out.String()
-	ret = strings.Trim(ret, "\n")
+// NormalizeQuery converts a regular query to lowercase, and strips new lines.
+// This ensures that queries stored in the state are consistent with the queries
+// stored in Clickhouse's `system.tables`
+func NormalizeQuery(query string) string {
+	query = strings.ToLower(query)
+	query = strings.ReplaceAll(query, "\n", " ")
+	query = strings.Join(strings.Fields(query), " ")
 
-	return ret
+	return query
 }

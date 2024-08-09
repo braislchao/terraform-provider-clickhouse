@@ -50,7 +50,7 @@ func ResourceView() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				StateFunc: func(val interface{}) string {
-					return common.FormatSQL(val.(string))
+					return common.NormalizeQuery(val.(string))
 				},
 			},
 			"materialized": {
