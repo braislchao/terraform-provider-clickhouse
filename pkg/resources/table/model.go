@@ -81,15 +81,9 @@ type PartitionByResource struct {
 // -- end parsed types --
 
 func (t *CHTable) IndexesToResource() []IndexDefinition {
-	var indexResources []IndexDefinition
-	for _, index := range t.Indexes {
-		indexResource := IndexDefinition{
-			Name:        index.Name,
-			Expression:  index.Expression,
-			Type:        index.Type,
-			Granularity: index.Granularity,
-		}
-		indexResources = append(indexResources, indexResource)
+	indexResources := make([]IndexDefinition, len(t.Indexes))
+	for i, index := range t.Indexes {
+		indexResources[i] = IndexDefinition(index)
 	}
 	return indexResources
 }
