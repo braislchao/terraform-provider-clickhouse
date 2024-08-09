@@ -24,39 +24,39 @@ func ResourceDb() *schema.Resource {
 		DeleteContext: resourceDbDelete,
 
 		Schema: map[string]*schema.Schema{
-			"cluster": &schema.Schema{
+			"cluster": {
 				Description: "Cluster name, not mandatory but should be provided if creating a db in a clustered server",
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Description: "Database name",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 			},
-			"engine": &schema.Schema{
+			"engine": {
 				Description: "Database engine",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"data_path": &schema.Schema{
+			"data_path": {
 				Description: "Database internal path",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"metadata_path": &schema.Schema{
+			"metadata_path": {
 				Description: "Database internal metadata path",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"uuid": &schema.Schema{
+			"uuid": {
 				Description: "Database UUID",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Description: "Comment about the database",
 				Type:        schema.TypeString,
 				Optional:    true,
