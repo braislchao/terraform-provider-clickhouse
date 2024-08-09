@@ -208,7 +208,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	database := d.Get("database").(string)
 	tableName := d.Get("name").(string)
 
-	chTableService := CHTableService{CHConnection: conn}
+	chTableService := CHTableService{ClickhouseConnection: conn}
 	chTable, err := chTableService.GetTable(ctx, database, tableName)
 	if chTable == nil && err == nil {
 		d.SetId("")
@@ -334,7 +334,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	client := meta.(*common.ApiClient)
 	conn := client.ClickhouseConnection
 	tableResource := TableResource{}
-	chTableService := CHTableService{CHConnection: conn}
+	chTableService := CHTableService{ClickhouseConnection: conn}
 
 	tableResource.Cluster = d.Get("cluster").(string)
 	tableResource.Database = d.Get("database").(string)
@@ -374,7 +374,7 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	client := meta.(*common.ApiClient)
 	conn := client.ClickhouseConnection
-	chTableService := CHTableService{CHConnection: conn}
+	chTableService := CHTableService{ClickhouseConnection: conn}
 
 	var tableResource TableResource
 	tableResource.Database = d.Get("database").(string)
@@ -397,7 +397,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	client := meta.(*common.ApiClient)
 	conn := client.ClickhouseConnection
-	chTableService := CHTableService{CHConnection: conn}
+	chTableService := CHTableService{ClickhouseConnection: conn}
 
 	tableResource := TableResource{}
 

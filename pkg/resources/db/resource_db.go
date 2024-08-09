@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type CHTableService common.ApiClient
+
 func ResourceDb() *schema.Resource {
 	return &schema.Resource{
 		// This description is used by the documentation generator and the language server.
@@ -203,7 +205,7 @@ func resourceDbDelete(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return diags
 	}
 
-	chTableService := resourcetable.CHTableService{CHConnection: conn}
+	chTableService := resourcetable.CHTableService{ClickhouseConnection: conn}
 	chDBService := CHDBService{CHConnection: conn, CHTableService: &chTableService}
 	dbResources, err := chDBService.GetDBResources(ctx, databaseName)
 

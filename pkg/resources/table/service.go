@@ -5,15 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type CHTableService struct {
-	CHConnection *driver.Conn
-}
+type CHTableService common.ApiClient
 
 func copyToMap(iface interface{}) map[string]interface{} {
 	mapCopy := iface.(map[string]interface{})
@@ -73,7 +70,7 @@ func executeQuery(ctx context.Context, ts *CHTableService, query string) error {
 	}
 
 	// Execute the query
-	err := (*ts.CHConnection).Exec(ctx, query)
+	err := (*ts.ClickhouseConnection).Exec(ctx, query)
 	if err != nil {
 		return fmt.Errorf("executing query: %v", err)
 	}
@@ -83,7 +80,7 @@ func executeQuery(ctx context.Context, ts *CHTableService, query string) error {
 func formatQuery(ctx context.Context, ts *CHTableService, query string) (string, error) {
 	escapedQuery := strings.ReplaceAll(query, "'", "''")
 	formatQueryStmt := fmt.Sprintf("SELECT formatQuery('%s')", escapedQuery)
-	row := (*ts.CHConnection).QueryRow(ctx, formatQueryStmt)
+	row := (*ts.ClickhouseConnection).QueryRow(ctx, formatQueryStmt)
 
 	var formattedQueryResult string
 	if err := row.Scan(&formattedQueryResult); err != nil {
@@ -147,7 +144,7 @@ func dropOldColumns(ctx context.Context, ts *CHTableService, table TableResource
 
 func (ts *CHTableService) GetDBTables(ctx context.Context, database string) ([]CHTable, error) {
 	query := fmt.Sprintf("SELECT database, name FROM system.tables where database = '%s'", database)
-	rows, err := (*ts.CHConnection).Query(ctx, query)
+	rows, err := (*ts.ClickhouseConnection).Query(ctx, query)
 
 	if err != nil {
 		return nil, fmt.Errorf("reading tables from Clickhouse: %v", err)
@@ -168,7 +165,7 @@ func (ts *CHTableService) GetDBTables(ctx context.Context, database string) ([]C
 
 func (ts *CHTableService) GetTable(ctx context.Context, database string, table string) (*CHTable, error) {
 	query := fmt.Sprintf("SELECT database, name, engine_full, engine, comment FROM system.tables where database = '%s' and name = '%s'", database, table)
-	row := (*ts.CHConnection).QueryRow(ctx, query)
+	row := (*ts.ClickhouseConnection).QueryRow(ctx, query)
 
 	if row.Err() != nil {
 		return nil, fmt.Errorf("reading table from Clickhouse: %v", row.Err())
@@ -202,7 +199,7 @@ func (ts *CHTableService) getTableIndexes(ctx context.Context, database string, 
 		database,
 		table,
 	)
-	rows, err := (*ts.CHConnection).Query(ctx, query)
+	rows, err := (*ts.ClickhouseConnection).Query(ctx, query)
 
 	if err != nil {
 		return nil, fmt.Errorf("reading indexes from Clickhouse: %v", err)
@@ -226,7 +223,7 @@ func (ts *CHTableService) getTableColumns(ctx context.Context, database string, 
 		database,
 		table,
 	)
-	rows, err := (*ts.CHConnection).Query(ctx, query)
+	rows, err := (*ts.ClickhouseConnection).Query(ctx, query)
 
 	if err != nil {
 		return nil, fmt.Errorf("reading columns from Clickhouse: %v", err)
