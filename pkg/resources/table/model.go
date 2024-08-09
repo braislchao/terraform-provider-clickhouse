@@ -221,7 +221,7 @@ func (t *TableResource) Validate(diags diag.Diagnostics) {
 
 func (t *TableResource) validateOrderBy(diags diag.Diagnostics) {
 	for _, orderField := range t.OrderBy {
-		if t.HasColumn(orderField) == false {
+		if !t.HasColumn(orderField) {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "wrong value",
@@ -233,7 +233,7 @@ func (t *TableResource) validateOrderBy(diags diag.Diagnostics) {
 
 func (t *TableResource) validatePartitionBy(diags diag.Diagnostics) {
 	for _, partitionBy := range t.PartitionBy {
-		if t.HasColumn(partitionBy.By) == false {
+		if !t.HasColumn(partitionBy.By) {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "wrong value",
