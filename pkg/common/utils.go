@@ -102,6 +102,21 @@ func NormalizeQuery(query string) string {
 	return query
 }
 
+func GetCreateStatement(resourceType string) string {
+	resourceType = strings.ToUpper(resourceType)
+	isDatabase := resourceType == "DATABASE"
+
+	if IsEnvTrue("TF_VAR_CREATE_OR_REPLACE") && !isDatabase {
+		return fmt.Sprintf("CREATE OR REPLACE %s", resourceType)
+	}
+
+	if IsEnvTrue("TF_VAR_CREATE_IF_NOT_EXISTS") {
+		return fmt.Sprintf("CREATE %s IF NOT EXISTS", resourceType)
+	}
+
+	return fmt.Sprintf("CREATE %s", resourceType)
+}
+
 func IsEnvTrue(envVar string) bool {
 	val, ok := os.LookupEnv(envVar)
 	return ok && strings.ToLower(val) == "true"

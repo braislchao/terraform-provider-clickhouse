@@ -2,12 +2,14 @@ package testutils
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -80,5 +82,32 @@ func CheckStateSetAttr(attrKey string, resource string, expectedItems []string) 
 		}
 
 		return nil
+	}
+}
+
+type TestCase struct {
+	EnvVars     map[string]string
+	ExpectedSQL string
+}
+
+func RunGetCreateStatementTest(t *testing.T, resourceType string, testCases []TestCase) {
+	for _, tt := range testCases {
+		for key, value := range tt.EnvVars {
+			if err := os.Setenv(key, value); err != nil {
+				t.Fatalf("Failed to set environment variable %s: %v", key, err)
+			}
+		}
+
+		result := common.GetCreateStatement(resourceType)
+
+		if result != tt.ExpectedSQL {
+			t.Errorf("GetCreateStatement() = %v, expected %v", result, tt.ExpectedSQL)
+		}
+
+		for key := range tt.EnvVars {
+			if err := os.Unsetenv(key); err != nil {
+				t.Fatalf("Failed to unset environment variable %s: %v", key, err)
+			}
+		}
 	}
 }

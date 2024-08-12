@@ -51,6 +51,30 @@ func TestAccResourceDb(t *testing.T) {
 	})
 }
 
+func TestGetCreateStatementForDatabase(t *testing.T) {
+	testCases := []testutils.TestCase{
+		{
+			EnvVars: map[string]string{
+				"TF_VAR_CREATE_IF_NOT_EXISTS": "true",
+			},
+			ExpectedSQL: "CREATE DATABASE IF NOT EXISTS",
+		},
+		{
+			EnvVars:     map[string]string{}, // Default case
+			ExpectedSQL: "CREATE DATABASE",
+		},
+		{
+			EnvVars: map[string]string{
+				"TF_VAR_CREATE_IF_NOT_EXISTS": "true",
+				"TF_VAR_CREATE_OR_REPLACE":    "true",
+			},
+			ExpectedSQL: "CREATE DATABASE IF NOT EXISTS", // Replace env var has no effect
+		},
+	}
+
+	testutils.RunGetCreateStatementTest(t, "database", testCases)
+}
+
 const testResourceDBDatabaseName = "testing_db"
 const testResourceDBDatabaseName2 = "testing_db_2"
 const testResourceDBDatabaseComment = "This is a testing database"

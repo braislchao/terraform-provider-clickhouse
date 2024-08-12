@@ -89,7 +89,7 @@ func buildTTLSentence(ttl map[string]string) string {
 }
 
 func buildCreateOnClusterSentence(resource TableResource) (query string) {
-	createStatement := GetCreateStatement()
+	createStatement := common.GetCreateStatement("table")
 
 	columnsStatement := ""
 	if len(resource.Columns) > 0 {
@@ -124,15 +124,4 @@ func buildCreateOnClusterSentence(resource TableResource) (query string) {
 		resource.Comment,
 	)
 	return ret
-}
-
-func GetCreateStatement() string {
-	switch {
-	case common.IsEnvTrue("TF_VAR_CREATE_OR_REPLACE_TABLE"):
-		return "CREATE OR REPLACE TABLE"
-	case common.IsEnvTrue("TF_VAR_CREATE_TABLE_IF_NOT_EXISTS"):
-		return "CREATE TABLE IF NOT EXISTS"
-	default:
-		return "CREATE TABLE"
-	}
 }
