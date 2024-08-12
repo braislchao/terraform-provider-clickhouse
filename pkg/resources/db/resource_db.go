@@ -175,9 +175,9 @@ func resourceDbCreate(ctx context.Context, d *schema.ResourceData, meta any) dia
 	clusterStatement := common.GetClusterStatement(cluster)
 	databaseName := d.Get("name").(string)
 	comment := d.Get("comment").(string)
+	createStatement := common.GetCreateStatement("database")
 
-	query := fmt.Sprintf("CREATE DATABASE %v %v COMMENT '%v'", databaseName, clusterStatement, common.GetComment(comment, cluster, nil))
-
+	query := fmt.Sprintf("%s %v %v COMMENT '%v'", createStatement, databaseName, clusterStatement, common.GetComment(comment, cluster, nil))
 	err := conn.Exec(ctx, query)
 	if err != nil {
 		return diag.FromErr(err)

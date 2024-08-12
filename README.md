@@ -69,15 +69,15 @@ resource "clickhouse_db" "test_db_clusterd" {
 
 ### Creating or replacing tables
 
-It is possible to modify the CREATE TABLE statement using the following variables:
+It is possible to modify the CREATE TABLE/CREATE DATABASE statement using the following variables:
 
 ```config
-TF_VAR_CREATE_OR_REPLACE_TABLE=true
+TF_VAR_CREATE_OR_REPLACE=true
 ```
 or
 
 ```config
-TF_VAR_CREATE_TABLE_IF_NOT_EXISTS=true
+TF_VAR_CREATE_IF_NOT_EXISTS=true
 ```
 
 ### Clustered server
