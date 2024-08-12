@@ -106,7 +106,7 @@ resource "clickhouse_db" "test_db_clusterd" {
 
 ### Clustered server using Altinity Clickhouse Operator
 
-I is possible to use macros defined for cluster, databases, installation names in Altinity operator when creating resources.
+It is possible to use macros defined for cluster, databases, installation names in Altinity operator when creating resources.
 
 ```hcl
 provider "clickhouse" {
@@ -213,6 +213,15 @@ provider_installation {
 > Disable this before running commands on production to avoid using an untested version of the provider.
 
 To generate or update documentation, run `go generate`.
+
+To run tests locally, you can run a local Clickhouse server:
+
+```sh
+curl https://clickhouse.com/ | sh
+CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1 ./clickhouse server
+```
+
+then run the tests:
 
 ```sh
 $ make testacc
