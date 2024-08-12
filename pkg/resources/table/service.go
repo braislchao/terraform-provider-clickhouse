@@ -105,7 +105,7 @@ func handleColumnChanges(ctx context.Context, ts *CHTableService, table TableRes
 		return executeQuery(ctx, ts, fmt.Sprintf(
 			"ALTER TABLE %s.%s %s ADD COLUMN %s %s %s %s %s %s",
 			table.Database, table.Name, clusterStatement, columnMap["name"], columnMap["type"], columnMap["default_kind"],
-			columnMap["default_expression"], getComment(columnMap["comment"].(string)), columnMap["location"]))
+			columnMap["default_expression"], columnMap["comment"].(string), columnMap["location"]))
 	} else {
 		oldColumn := oldColumnsMap[columnName]
 		if oldColumn["type"] != columnMap["type"] {
