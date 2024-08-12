@@ -61,8 +61,8 @@ func ResourceDb() *schema.Resource {
 				Description: "Comment about the database",
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "",
 				ForceNew:    true,
+				Default:     "",
 			},
 		},
 	}
@@ -132,13 +132,9 @@ func resourceDbRead(ctx context.Context, d *schema.ResourceData, meta any) diag.
 			Summary:  fmt.Sprintf("Unable to set uuid for db %q", name),
 		})
 	}
-	err = d.Set("comment", comment)
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Unable to set comment for db %q", name),
-		})
-	}
+
+	// not set - comment
+
 	err = d.Set("cluster", cluster)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
