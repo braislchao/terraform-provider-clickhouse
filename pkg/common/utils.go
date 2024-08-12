@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"os"
 
 	"encoding/json"
 	"fmt"
@@ -99,4 +100,9 @@ func NormalizeQuery(query string) string {
 	query = strings.Join(strings.Fields(query), " ")
 
 	return query
+}
+
+func IsEnvTrue(envVar string) bool {
+	val, ok := os.LookupEnv(envVar)
+	return ok && strings.ToLower(val) == "true"
 }
