@@ -51,13 +51,13 @@ provider "clickhouse" {
 }
 ```
 
-In order to definte url, username and password in a safety way it is possible to define them using env vars:
+In order to define the host, username and password in a safety way it is possible to define them using env vars:
 
 ```config
-TF_CLICKHOUSE_USERNAME=default
-TF_CLICKHOUSE_PASSWORD=""
-TF_CLICKHOUSE_HOST="127.0.0.1"
-TF_CLICKHOUSE_PORT=9000
+TF_VAR_CLICKHOUSE_USERNAME=default
+TF_VAR_CLICKHOUSE_PASSWORD=""
+TF_VAR_CLICKHOUSE_HOST="127.0.0.1"
+TF_VAR_CLICKHOUSE_PORT=9000
 ```
 
 ```hcl
@@ -65,6 +65,19 @@ resource "clickhouse_db" "test_db_clusterd" {
   name = "database_test_clustered"
   comment = "This is a test database"
 }
+```
+
+### Creating or replacing tables
+
+It is possible to modify the CREATE TABLE statement using the following variables:
+
+```config
+TF_VAR_CREATE_OR_REPLACE_TABLE=true
+```
+or
+
+```config
+TF_VAR_CREATE_TABLE_IF_NOT_EXISTS=true
 ```
 
 ### Clustered server
@@ -93,7 +106,7 @@ resource "clickhouse_db" "test_db_clusterd" {
 
 ### Clustered server using Altinity Clickhouse Operator
 
-I is possible to use macros defined for cluster, databases, installation names in Altinity operator when creating resources.
+It is possible to use macros defined for cluster, databases, installation names in Altinity operator when creating resources.
 
 ```hcl
 provider "clickhouse" {
@@ -184,11 +197,31 @@ If you wish to work on the provider, you'll first need [Go](http://www.golang.or
 
 To compile the provider, run `go install`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
 
+Create a .terraformrc config file in `$HOME/.terraformrc`:
+
+```terraform
+provider_installation {
+
+  dev_overrides {
+      "hashicorp.com/flowdeskmarkets/clickhouse" = "/Users/benjamin.dornel/dev/terraform-provider-clickhouse"
+  }
+  direct {}
+}
+```
+
+> [!WARNING]
+> Disable this before running commands on production to avoid using an untested version of the provider.
+
 To generate or update documentation, run `go generate`.
 
-In order to run the full suite of Acceptance tests, run `make testacc`.
+To run tests locally, you can run a local Clickhouse server:
 
-_Note:_ Acceptance tests create real resources, and often cost money to run.
+```sh
+curl https://clickhouse.com/ | sh
+CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1 ./clickhouse server
+```
+
+then run the tests:
 
 ```sh
 $ make testacc

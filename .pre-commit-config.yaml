@@ -14,10 +14,9 @@ repos:
       - id: terraform_tflint
         name: Terraform Lint
         args: [--args=--disable-rule=terraform_required_version]
-      - id: terraform_validate
-        name: Terraform Validate
   - repo: https://github.com/dnephin/pre-commit-golang
     rev: v0.5.1
     hooks:
       - id: go-fmt
       - id: golangci-lint
+      - id: go-generate

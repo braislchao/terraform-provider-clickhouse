@@ -1,10 +1,12 @@
 package resourcetable_test
 
 import (
+	"os"
 	"regexp"
 	"strings"
 	"testing"
 
+	resourcetable "github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/resources/table"
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/testutils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -94,4 +96,55 @@ func tableConfigWithName(database string, tableName string) string {
 	s = strings.Replace(s, "%_database_%", database, -1)
 	s = strings.Replace(s, "%_tableName_%", tableName, -1)
 	return s
+}
+
+func TestGetCreateStatement(t *testing.T) {
+	tests := []struct {
+		envVars     map[string]string
+		expectedSQL string
+	}{
+		{
+			envVars: map[string]string{
+				"TF_VAR_CREATE_OR_REPLACE_TABLE": "true",
+			},
+			expectedSQL: "CREATE OR REPLACE TABLE",
+		},
+		{
+			envVars: map[string]string{
+				"TF_VAR_CREATE_TABLE_IF_NOT_EXISTS": "true",
+			},
+			expectedSQL: "CREATE TABLE IF NOT EXISTS",
+		},
+		{
+			envVars:     map[string]string{}, // Default case
+			expectedSQL: "CREATE TABLE",
+		},
+		{
+			envVars: map[string]string{
+				"TF_VAR_CREATE_TABLE_IF_NOT_EXISTS": "true",
+				"TF_VAR_CREATE_OR_REPLACE_TABLE":    "true",
+			},
+			expectedSQL: "CREATE OR REPLACE TABLE", // Priority to CREATE_IF_NOT_EXISTS
+		},
+	}
+
+	for _, tt := range tests {
+		for key, value := range tt.envVars {
+			if err := os.Setenv(key, value); err != nil {
+				t.Fatalf("Failed to set environment variable %s: %v", key, err)
+			}
+		}
+
+		result := resourcetable.GetCreateStatement()
+
+		if result != tt.expectedSQL {
+			t.Errorf("getCreateStatement() = %v, expected %v", result, tt.expectedSQL)
+		}
+
+		for key := range tt.envVars {
+			if err := os.Unsetenv(key); err != nil {
+				t.Fatalf("Failed to unset environment variable %s: %v", key, err)
+			}
+		}
+	}
 }

@@ -76,9 +76,9 @@ jobs:
         # Set health checks to wait until redis has started
         options: >-
           --health-cmd "clickhouse-client --database=system --query='select * from databases'"
-          --health-interval 15s
+          --health-interval 1s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 60
 
     timeout-minutes: 15
     strategy:
@@ -111,10 +111,10 @@ jobs:
       timeout-minutes: 10
       env:
         TF_ACC: "1"
-        TF_CLICKHOUSE_HOST: "127.0.0.1"
-        TF_CLICKHOUSE_USERNAME: "default"
-        TF_CLICKHOUSE_PASSWORD: ""
-        TF_CLICKHOUSE_PORT: "9000"
+        TF_VAR_CLICKHOUSE_HOST: "127.0.0.1"
+        TF_VAR_CLICKHOUSE_USERNAME: "default"
+        TF_VAR_CLICKHOUSE_PASSWORD: ""
+        TF_VAR_CLICKHOUSE_PORT: "9000"
 
         # Set whatever additional acceptance test env vars here. You can
         # optionally use data from your repository secrets using the

@@ -2,6 +2,7 @@ package resourcetable
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
@@ -89,6 +90,8 @@ func buildTTLSentence(ttl map[string]string) string {
 }
 
 func buildCreateOnClusterSentence(resource TableResource) (query string) {
+	createStatement := GetCreateStatement()
+
 	columnsStatement := ""
 	if len(resource.Columns) > 0 {
 		columnsStatement = "("
@@ -106,7 +109,8 @@ func buildCreateOnClusterSentence(resource TableResource) (query string) {
 	clusterStatement := common.GetClusterStatement(resource.Cluster)
 
 	ret := fmt.Sprintf(
-		"CREATE TABLE %v.%v %v %v ENGINE = %v(%v) %s %s %s %s %s COMMENT '%s'",
+		"%s %v.%v %v %v ENGINE = %v(%v) %s %s %s %s %s COMMENT '%s'",
+		createStatement,
 		resource.Database,
 		resource.Name,
 		clusterStatement,
@@ -121,4 +125,20 @@ func buildCreateOnClusterSentence(resource TableResource) (query string) {
 		resource.Comment,
 	)
 	return ret
+}
+
+func GetCreateStatement() string {
+	switch {
+	case isEnvTrue("TF_VAR_CREATE_OR_REPLACE_TABLE"):
+		return "CREATE OR REPLACE TABLE"
+	case isEnvTrue("TF_VAR_CREATE_TABLE_IF_NOT_EXISTS"):
+		return "CREATE TABLE IF NOT EXISTS"
+	default:
+		return "CREATE TABLE"
+	}
+}
+
+func isEnvTrue(envVar string) bool {
+	val, ok := os.LookupEnv(envVar)
+	return ok && strings.ToLower(val) == "true"
 }
