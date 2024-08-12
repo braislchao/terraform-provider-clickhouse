@@ -197,13 +197,15 @@ If you wish to work on the provider, you'll first need [Go](http://www.golang.or
 
 To compile the provider, run `go install`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
 
+After making changes to provider, run `go build -o terraform-provider-clickhouse` to create a local binary.
+
 Create a .terraformrc config file in `$HOME/.terraformrc`:
 
 ```terraform
 provider_installation {
 
   dev_overrides {
-      "hashicorp.com/flowdeskmarkets/clickhouse" = "/Users/benjamin.dornel/dev/terraform-provider-clickhouse"
+      "hashicorp.com/flowdeskmarkets/clickhouse" = "/Users/<path-to-binary>/terraform-provider-clickhouse"
   }
   direct {}
 }
@@ -224,5 +226,5 @@ CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1 ./clickhouse server
 then run the tests:
 
 ```sh
-$ make testacc
+$ go build -o terraform-clickhouse-provider && make testacc
 ```
