@@ -51,13 +51,13 @@ provider "clickhouse" {
 }
 ```
 
-In order to definte url, username and password in a safety way it is possible to define them using env vars:
+In order to define the host, username and password in a safety way it is possible to define them using env vars:
 
 ```config
-TF_CLICKHOUSE_USERNAME=default
-TF_CLICKHOUSE_PASSWORD=""
-TF_CLICKHOUSE_HOST="127.0.0.1"
-TF_CLICKHOUSE_PORT=9000
+TF_VAR_CLICKHOUSE_USERNAME=default
+TF_VAR_CLICKHOUSE_PASSWORD=""
+TF_VAR_CLICKHOUSE_HOST="127.0.0.1"
+TF_VAR_CLICKHOUSE_PORT=9000
 ```
 
 ```hcl

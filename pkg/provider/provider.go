@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"os"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
@@ -16,7 +15,6 @@ import (
 	resourceview "github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/resources/view"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/joho/godotenv"
 )
 
 func init() {
@@ -37,50 +35,37 @@ func init() {
 
 func New(version string) func() *schema.Provider {
 	return func() *schema.Provider {
-		p := &schema.Provider{
+		return &schema.Provider{
 			Schema: map[string]*schema.Schema{
 				"default_cluster": {
 					Description: "Default cluster, if provided will be used when no cluster is provided",
 					Type:        schema.TypeString,
 					Optional:    true,
-					Default:     "",
 				},
 				"username": {
 					Description: "Clickhouse username with admin privileges",
 					Type:        schema.TypeString,
 					Optional:    true,
-					DefaultFunc: func() (any, error) {
-						return getEnvVar("TF_CLICKHOUSE_USERNAME")
-					},
+					DefaultFunc: schema.EnvDefaultFunc("TF_VAR_CLICKHOUSE_USERNAME", nil),
 				},
 				"password": {
 					Description: "Clickhouse user password with admin privileges",
 					Type:        schema.TypeString,
 					Optional:    true,
 					Sensitive:   true,
-					DefaultFunc: func() (any, error) {
-						if password, _ := getEnvVar("TF_CLICKHOUSE_PASSWORD"); password != nil {
-							return password, nil
-						}
-						return "", nil
-					},
+					DefaultFunc: schema.EnvDefaultFunc("TF_VAR_CLICKHOUSE_PASSWORD", nil),
 				},
 				"host": {
-					Description: "Clickhouse server url",
+					Description: "Clickhouse server URL",
 					Type:        schema.TypeString,
 					Required:    true,
-					Sensitive:   true,
-					DefaultFunc: func() (any, error) {
-						return getEnvVar("TF_CLICKHOUSE_HOST")
-					},
+					DefaultFunc: schema.EnvDefaultFunc("TF_VAR_CLICKHOUSE_HOST", nil),
 				},
 				"port": {
 					Description: "Clickhouse server native protocol port (TCP)",
 					Type:        schema.TypeInt,
 					Required:    true,
-					DefaultFunc: func() (any, error) {
-						return getEnvVar("TF_CLICKHOUSE_PORT")
-					},
+					DefaultFunc: schema.EnvDefaultFunc("TF_VAR_CLICKHOUSE_PORT", nil),
 				},
 				"secure": {
 					Description: "Clickhouse secure connection",
@@ -101,17 +86,7 @@ func New(version string) func() *schema.Provider {
 			},
 			ConfigureContextFunc: configure(),
 		}
-
-		return p
 	}
-}
-
-func getEnvVar(envVarName string) (any, error) {
-	_ = godotenv.Load(".env")
-	if v := os.Getenv(envVarName); v != "" {
-		return v, nil
-	}
-	return nil, fmt.Errorf("env var %v not present", envVarName)
 }
 
 func configure() func(context.Context, *schema.ResourceData) (any, diag.Diagnostics) {
