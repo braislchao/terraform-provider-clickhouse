@@ -228,3 +228,11 @@ then run the tests:
 ```sh
 $ go build -o terraform-clickhouse-provider && make testacc
 ```
+
+To release the provider on the Hashicorp registry, manually trigger the `release` workflow via Github.
+
+Ensure that the current tag was made against the latest commit, otherwise you may face an error like:
+
+```error
+  ⨯ release failed after 0s                  error=git tag v1.2.0 was not made against commit ad38fef5
+```
