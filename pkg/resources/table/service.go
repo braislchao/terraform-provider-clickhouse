@@ -2,6 +2,7 @@ package resourcetable
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -105,7 +106,7 @@ func handleColumnChanges(ctx context.Context, ts *CHTableService, table TableRes
 		return executeQuery(ctx, ts, fmt.Sprintf(
 			"ALTER TABLE %s.%s %s ADD COLUMN %s %s %s %s %s %s",
 			table.Database, table.Name, clusterStatement, columnMap["name"], columnMap["type"], columnMap["default_kind"],
-			columnMap["default_expression"], getComment(columnMap["comment"].(string)), columnMap["location"]))
+			columnMap["default_expression"], columnMap["comment"].(string), columnMap["location"]))
 	} else {
 		oldColumn := oldColumnsMap[columnName]
 		if oldColumn["type"] != columnMap["type"] {
@@ -173,7 +174,7 @@ func (ts *CHTableService) GetTable(ctx context.Context, database string, table s
 
 	var chTable CHTable
 	err := row.ScanStruct(&chTable)
-	if err != nil && strings.Contains(err.Error(), "no rows in result set") {
+	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {

@@ -1,7 +1,6 @@
 package resourceview
 
 import (
-	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
@@ -30,14 +29,7 @@ func (t *CHView) ToResource() (*ViewResource, error) {
 		Query:    t.Query,
 	}
 
-	comment, cluster, toTable, err := common.UnmarshalComment(t.Comment)
-	if err != nil {
-		return nil, err
-	}
-
-	viewResource.Cluster = cluster
-	viewResource.Comment = comment
-	viewResource.ToTable = toTable
+	viewResource.Comment = t.Comment
 	viewResource.Materialized = t.Engine == "MaterializedView"
 
 	return &viewResource, nil

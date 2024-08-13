@@ -126,19 +126,19 @@ func ResourceTable() *schema.Resource {
 							Description: "Column Comment",
 							Type:        schema.TypeString,
 							Optional:    true,
-							Computed:    true,
+							Default:     "",
 						},
 						"default_kind": {
 							Description: "Column Default Kind",
 							Type:        schema.TypeString,
 							Optional:    true,
-							Computed:    true,
+							Default:     "",
 						},
 						"default_expression": {
 							Description: "Column Default Expression",
 							Type:        schema.TypeString,
 							Optional:    true,
-							Computed:    true,
+							Default:     "",
 						},
 					},
 				},
@@ -342,7 +342,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	tableResource.setColumns(d.Get("column").([]interface{}))
 	tableResource.setIndexes(d.Get("index").([]interface{}))
 	tableResource.Engine = d.Get("engine").(string)
-	tableResource.Comment = common.GetComment(d.Get("comment").(string), tableResource.Cluster, nil)
+	tableResource.Comment = d.Get("comment").(string)
 	tableResource.EngineParams = common.MapArrayInterfaceToArrayOfStrings(d.Get("engine_params").([]interface{}))
 	tableResource.PrimaryKey = common.MapArrayInterfaceToArrayOfStrings(d.Get("primary_key").([]interface{}))
 	tableResource.OrderBy = common.MapArrayInterfaceToArrayOfStrings(d.Get("order_by").([]interface{}))
@@ -405,7 +405,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	tableResource.Name = d.Get("name").(string)
 	tableResource.Cluster = d.Get("cluster").(string)
 	tableResource.setColumns(d.Get("column").([]interface{}))
-	tableResource.Comment = common.GetComment(d.Get("comment").(string), tableResource.Cluster, nil)
+	tableResource.Comment = d.Get("comment").(string)
 
 	err := chTableService.UpdateTable(ctx, tableResource, d)
 	if err != nil {

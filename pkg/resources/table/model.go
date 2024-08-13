@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
@@ -105,26 +104,16 @@ func (t *CHTable) ColumnsToResource() []ColumnDefinition {
 
 func (t *CHTable) ToResource() (*TableResource, error) {
 	tableResource := TableResource{
-		Database:   t.Database,
-		Name:       t.Name,
-		EngineFull: t.EngineFull,
-		Engine:     t.Engine,
-		Columns:    t.ColumnsToResource(),
-		Indexes:    t.IndexesToResource(),
+		Database:     t.Database,
+		Name:         t.Name,
+		EngineFull:   t.EngineFull,
+		Engine:       t.Engine,
+		EngineParams: removeDefaultParams(GetEngineParams(t.EngineFull)),
+		OrderBy:      GetOrderBy(t.EngineFull),
+		Columns:      t.ColumnsToResource(),
+		Indexes:      t.IndexesToResource(),
+		Comment:      t.Comment,
 	}
-
-	engineParams := GetEngineParams(t.EngineFull)
-	orderBy := GetOrderBy(t.EngineFull)
-
-	comment, cluster, _, err := common.UnmarshalComment(t.Comment)
-	if err != nil {
-		return nil, err
-	}
-
-	tableResource.OrderBy = orderBy
-	tableResource.Cluster = cluster
-	tableResource.Comment = comment
-	tableResource.EngineParams = removeDefaultParams(engineParams)
 
 	return &tableResource, nil
 }

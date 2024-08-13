@@ -4,47 +4,11 @@ import (
 	"context"
 	"os"
 
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-func toTablePhrase(toTable *string) string {
-	if toTable != nil {
-		return fmt.Sprintf(`,"to_table":"%v"`, *toTable)
-	}
-	return ""
-}
-
-func GetComment(comment string, cluster string, toTable *string) string {
-	storingComment := fmt.Sprintf(`{"comment":"%v","cluster":"%v"%s}`, comment, cluster, toTablePhrase(toTable))
-	storingComment = strings.Replace(storingComment, "'", "\\'", -1)
-	return storingComment
-}
-
-func UnmarshalComment(storedComment string) (comment string, cluster string, toTable string, err error) {
-	if storedComment == "" {
-		return "", "", "", nil
-	}
-	storedComment = strings.Replace(storedComment, "\\'", "'", -1)
-
-	byteStreamComment := []byte(storedComment)
-
-	var dat map[string]interface{}
-
-	if err := json.Unmarshal(byteStreamComment, &dat); err != nil {
-		return "", "", "", err
-	}
-	comment = dat["comment"].(string)
-	cluster = dat["cluster"].(string)
-	if dat["to_table"] != nil {
-		toTable = dat["to_table"].(string)
-	}
-
-	return comment, cluster, toTable, err
-}
 
 func GetClusterStatement(cluster string) (clusterStatement string) {
 	if cluster != "" {

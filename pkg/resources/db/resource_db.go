@@ -2,6 +2,7 @@ package resourcedb
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	resourcetable "github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/resources/table"
@@ -29,6 +30,7 @@ func ResourceDb() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
+				Default:     "",
 			},
 			"name": {
 				Description: "Database name",
@@ -60,8 +62,8 @@ func ResourceDb() *schema.Resource {
 				Description: "Comment about the database",
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "",
 				ForceNew:    true,
+				Default:     "",
 			},
 		},
 	}
@@ -71,7 +73,7 @@ func resourceDbRead(ctx context.Context, d *schema.ResourceData, meta any) diag.
 	client := meta.(*common.ApiClient)
 	var diags diag.Diagnostics
 	conn := *client.ClickhouseConnection
-	defaultCluster := client.DefaultCluster
+	cluster := d.Get("cluster").(string)
 
 	database_name := d.Get("name").(string)
 	row := conn.QueryRow(ctx, fmt.Sprintf("SELECT name, engine, data_path, metadata_path, uuid, comment FROM system.databases where name = '%v'", database_name))
@@ -80,10 +82,15 @@ func resourceDbRead(ctx context.Context, d *schema.ResourceData, meta any) diag.
 		return diag.FromErr(fmt.Errorf("reading database from Clickhouse: %v", row.Err()))
 	}
 
-	var name, engine, dataPath, metadataPath, uuid, storedComment string
+	var name, engine, dataPath, metadataPath, uuid, comment string
 
-	err := row.Scan(&name, &engine, &dataPath, &metadataPath, &uuid, &storedComment)
+	err := row.Scan(&name, &engine, &dataPath, &metadataPath, &uuid, &comment)
 	if err != nil {
+		// If no rows were returned, treat this as a "new" resource that needs to be created
+		if err == sql.ErrNoRows {
+			d.SetId("")
+			return diags
+		}
 		return diag.FromErr(fmt.Errorf("scanning Clickhouse DB row: %v", err))
 	}
 
@@ -94,16 +101,6 @@ func resourceDbRead(ctx context.Context, d *schema.ResourceData, meta any) diag.
 			Detail:   "Not possible to retrieve db from server. Could you be performing operation in a cluster? If so try configuring default cluster name on you provider configuration.",
 		})
 		return diags
-	}
-
-	comment, cluster, _, err := common.UnmarshalComment(storedComment)
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  fmt.Sprintf("Unable to unmarshal comments for db %q", name),
-			Detail:   "Unable to unmarshal comments in order to retrieve cluster information for the table, so that default cluster is going to be used instead.",
-		})
-		comment, cluster = storedComment, defaultCluster
 	}
 
 	err = d.Set("name", name)
@@ -141,13 +138,9 @@ func resourceDbRead(ctx context.Context, d *schema.ResourceData, meta any) diag.
 			Summary:  fmt.Sprintf("Unable to set uuid for db %q", name),
 		})
 	}
-	err = d.Set("comment", comment)
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Unable to set comment for db %q", name),
-		})
-	}
+
+	// not set - comment
+
 	err = d.Set("cluster", cluster)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -177,7 +170,7 @@ func resourceDbCreate(ctx context.Context, d *schema.ResourceData, meta any) dia
 	comment := d.Get("comment").(string)
 	createStatement := common.GetCreateStatement("database")
 
-	query := fmt.Sprintf("%s %v %v COMMENT '%v'", createStatement, databaseName, clusterStatement, common.GetComment(comment, cluster, nil))
+	query := fmt.Sprintf("%s %v %v COMMENT '%v'", createStatement, databaseName, clusterStatement, comment)
 	err := conn.Exec(ctx, query)
 	if err != nil {
 		return diag.FromErr(err)

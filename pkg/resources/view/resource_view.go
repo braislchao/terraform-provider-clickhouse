@@ -140,7 +140,7 @@ func resourceViewCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	viewResource.Query = d.Get("query").(string)
 	viewResource.Materialized = d.Get("materialized").(bool)
 	viewResource.ToTable = d.Get("to_table").(string)
-	viewResource.Comment = common.GetComment(d.Get("comment").(string), viewResource.Cluster, &viewResource.ToTable)
+	viewResource.Comment = d.Get("comment").(string)
 
 	if viewResource.Cluster == "" {
 		viewResource.Cluster = client.DefaultCluster
