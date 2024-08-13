@@ -126,7 +126,6 @@ func ResourceTable() *schema.Resource {
 							Description: "Column Comment",
 							Type:        schema.TypeString,
 							Optional:    true,
-							Computed:    true,
 						},
 						"default_kind": {
 							Description: "Column Default Kind",
