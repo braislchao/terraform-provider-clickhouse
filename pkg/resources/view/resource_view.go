@@ -142,10 +142,6 @@ func resourceViewCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	viewResource.ToTable = d.Get("to_table").(string)
 	viewResource.Comment = d.Get("comment").(string)
 
-	if viewResource.Cluster == "" {
-		viewResource.Cluster = client.DefaultCluster
-	}
-
 	diags := viewResource.Validate()
 	if diags.HasError() {
 		return diags
@@ -172,9 +168,6 @@ func resourceViewDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	viewResource.Database = d.Get("database").(string)
 	viewResource.Name = d.Get("name").(string)
 	viewResource.Cluster = d.Get("cluster").(string)
-	if viewResource.Cluster == "" {
-		viewResource.Cluster = client.DefaultCluster
-	}
 
 	err := chViewService.DeleteView(ctx, viewResource)
 

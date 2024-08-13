@@ -45,6 +45,7 @@ Brewfile.lock.json
 # local files
 .access
 clickhouse
+data
 config.d
 metadata*
 preprocessed_configs/

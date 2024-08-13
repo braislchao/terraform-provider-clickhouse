@@ -350,10 +350,6 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	tableResource.Settings = common.MapInterfaceToMapOfString(d.Get("settings").(map[string]interface{}))
 	tableResource.TTL = common.MapInterfaceToMapOfString(d.Get("ttl").(map[string]interface{}))
 
-	if tableResource.Cluster == "" {
-		tableResource.Cluster = client.DefaultCluster
-	}
-
 	tableResource.Validate(diags)
 	if diags.HasError() {
 		return diags
@@ -380,9 +376,6 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	tableResource.Database = d.Get("database").(string)
 	tableResource.Name = d.Get("name").(string)
 	tableResource.Cluster = d.Get("cluster").(string)
-	if tableResource.Cluster == "" {
-		tableResource.Cluster = client.DefaultCluster
-	}
 
 	err := chTableService.DeleteTable(ctx, tableResource)
 

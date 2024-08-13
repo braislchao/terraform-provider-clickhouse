@@ -162,9 +162,6 @@ func resourceDbCreate(ctx context.Context, d *schema.ResourceData, meta any) dia
 	conn := *client.Connection
 
 	cluster, _ := d.Get("cluster").(string)
-	if cluster == "" {
-		cluster = client.DefaultCluster
-	}
 	clusterStatement := common.GetClusterStatement(cluster)
 	databaseName := d.Get("name").(string)
 	comment := d.Get("comment").(string)
@@ -219,9 +216,6 @@ func resourceDbDelete(ctx context.Context, d *schema.ResourceData, meta any) dia
 	}
 
 	cluster, _ := d.Get("cluster").(string)
-	if cluster == "" {
-		cluster = client.DefaultCluster
-	}
 	clusterStatement := common.GetClusterStatement(cluster)
 
 	query := fmt.Sprintf("DROP DATABASE %v %v SYNC", databaseName, clusterStatement)

@@ -94,7 +94,6 @@ func configure() func(context.Context, *schema.ResourceData) (any, diag.Diagnost
 		host := d.Get("host").(string)
 		port := d.Get("port").(int)
 		username := d.Get("username").(string)
-		defaultCluster := d.Get("default_cluster").(string)
 		password := d.Get("password").(string)
 		secure := d.Get("secure").(bool)
 
@@ -133,6 +132,6 @@ func configure() func(context.Context, *schema.ResourceData) (any, diag.Diagnost
 			return nil, diag.FromErr(fmt.Errorf("ping clickhouse database: %w", err))
 		}
 
-		return &common.Client{Connection: &conn, DefaultCluster: defaultCluster}, diags
+		return &common.Client{Connection: &conn}, diags
 	}
 }

@@ -5,6 +5,5 @@ import (
 )
 
 type Client struct {
-	Connection     *driver.Conn
-	DefaultCluster string
+	Connection *driver.Conn
 }
