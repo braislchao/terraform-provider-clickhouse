@@ -156,8 +156,8 @@ func testAccUserResource(userName string, password string, roles []string) strin
 
 func testAccCheckUserResourceExists(userName string, roles []string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		client := testutils.TestAccProvider.Meta().(*common.ApiClient)
-		conn := client.ClickhouseConnection
+		client := testutils.TestAccProvider.Meta().(*common.Client)
+		conn := client.Connection
 		chUserService := resourceuser.CHUserService{CHConnection: conn}
 
 		dbUser, err := chUserService.GetUser(context.Background(), userName)
@@ -190,8 +190,8 @@ func testAccCheckUserResourceExists(userName string, roles []string) resource.Te
 func testAccCheckUserResourceDestroy(userNames []string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		for _, userName := range userNames {
-			client := testutils.TestAccProvider.Meta().(*common.ApiClient)
-			conn := client.ClickhouseConnection
+			client := testutils.TestAccProvider.Meta().(*common.Client)
+			conn := client.Connection
 			chUserService := resourceuser.CHUserService{CHConnection: conn}
 			dbRole, err := chUserService.GetUser(context.Background(), userName)
 

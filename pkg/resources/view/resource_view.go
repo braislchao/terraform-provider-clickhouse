@@ -77,8 +77,8 @@ func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	var diags diag.Diagnostics
 
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
+	client := meta.(*common.Client)
+	conn := client.Connection
 
 	database := d.Get("database").(string)
 	viewName := d.Get("name").(string)
@@ -129,8 +129,8 @@ func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 }
 
 func resourceViewCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
+	client := meta.(*common.Client)
+	conn := client.Connection
 	viewResource := ViewResource{}
 	chViewService := CHViewService{CHConnection: conn}
 
@@ -164,8 +164,8 @@ func resourceViewCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 func resourceViewDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
+	client := meta.(*common.Client)
+	conn := client.Connection
 	chViewService := CHViewService{CHConnection: conn}
 
 	var viewResource ViewResource

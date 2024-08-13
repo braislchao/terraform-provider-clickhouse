@@ -42,8 +42,8 @@ func ResourceRole() *schema.Resource {
 func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
+	client := meta.(*common.Client)
+	conn := client.Connection
 
 	planRoleName := d.Get("name").(string)
 	planDatabase := d.Get("database").(string)
@@ -70,8 +70,8 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
+	client := meta.(*common.Client)
+	conn := client.Connection
 	chRoleService := CHRoleService{CHConnection: conn}
 
 	roleNameState := d.Get("name").(string)
@@ -102,8 +102,8 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
+	client := meta.(*common.Client)
+	conn := client.Connection
 
 	database := d.Get("database").(string)
 	roleName := d.Get("name").(string)
@@ -128,8 +128,8 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
+	client := meta.(*common.Client)
+	conn := client.Connection
 
 	roleName := d.Get("name").(string)
 	chRoleService := CHRoleService{CHConnection: conn}

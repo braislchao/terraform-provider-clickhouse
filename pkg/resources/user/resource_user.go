@@ -42,8 +42,8 @@ func ResourceUser() *schema.Resource {
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
+	client := meta.(*common.Client)
+	conn := client.Connection
 	chUserService := CHUserService{CHConnection: conn}
 
 	userName := d.Get("name").(string)
@@ -66,8 +66,8 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
+	client := meta.(*common.Client)
+	conn := client.Connection
 
 	userName := d.Get("name").(string)
 	password := d.Get("password").(string)
@@ -90,8 +90,8 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
+	client := meta.(*common.Client)
+	conn := client.Connection
 	chUserService := CHUserService{CHConnection: conn}
 
 	planUserName := d.Get("name").(string)
@@ -116,8 +116,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
+	client := meta.(*common.Client)
+	conn := client.Connection
 	chUserService := CHUserService{CHConnection: conn}
 
 	userName := d.Get("name").(string)

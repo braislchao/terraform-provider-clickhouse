@@ -43,8 +43,8 @@ func StringListToSet(list []string) *schema.Set {
 }
 
 func FormatQuery(ctx context.Context, query string, meta any) string {
-	client := meta.(*ApiClient)
-	conn := client.ClickhouseConnection
+	client := meta.(*Client)
+	conn := client.Connection
 	formatQueryStmt := `SELECT formatQuery($1)`
 	row := (*conn).QueryRow(ctx, formatQueryStmt, query)
 

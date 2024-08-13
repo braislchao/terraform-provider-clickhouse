@@ -297,8 +297,8 @@ func testAccRoleResource(roleName string, database string, privileges []string) 
 
 func testAccCheckRoleResourceExists(roleName string, database string, privileges []string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		client := testutils.TestAccProvider.Meta().(*common.ApiClient)
-		conn := client.ClickhouseConnection
+		client := testutils.TestAccProvider.Meta().(*common.Client)
+		conn := client.Connection
 		chRoleService := resourcerole.CHRoleService{CHConnection: conn}
 
 		dbRole, err := chRoleService.GetRole(context.Background(), roleName)
@@ -337,8 +337,8 @@ func testAccCheckRoleResourceExists(roleName string, database string, privileges
 func testAccCheckRoleResourceDestroy(roleNames []string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		for _, roleName := range roleNames {
-			client := testutils.TestAccProvider.Meta().(*common.ApiClient)
-			conn := client.ClickhouseConnection
+			client := testutils.TestAccProvider.Meta().(*common.Client)
+			conn := client.Connection
 			chRoleService := resourcerole.CHRoleService{CHConnection: conn}
 
 			dbRole, err := chRoleService.GetRole(context.Background(), roleName)

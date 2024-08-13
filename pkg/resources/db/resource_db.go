@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type CHTableService common.ApiClient
+type CHTableService common.Client
 
 func ResourceDb() *schema.Resource {
 	return &schema.Resource{
@@ -70,9 +70,9 @@ func ResourceDb() *schema.Resource {
 }
 
 func resourceDbRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*common.ApiClient)
+	client := meta.(*common.Client)
 	var diags diag.Diagnostics
-	conn := *client.ClickhouseConnection
+	conn := *client.Connection
 	cluster := d.Get("cluster").(string)
 
 	database_name := d.Get("name").(string)
@@ -157,9 +157,9 @@ func resourceDbRead(ctx context.Context, d *schema.ResourceData, meta any) diag.
 }
 
 func resourceDbCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*common.ApiClient)
+	client := meta.(*common.Client)
 	var diags diag.Diagnostics
-	conn := *client.ClickhouseConnection
+	conn := *client.Connection
 
 	cluster, _ := d.Get("cluster").(string)
 	if cluster == "" {
@@ -183,9 +183,9 @@ func resourceDbCreate(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 func resourceDbDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 
-	client := meta.(*common.ApiClient)
+	client := meta.(*common.Client)
 	var diags diag.Diagnostics
-	conn := client.ClickhouseConnection
+	conn := client.Connection
 
 	databaseName := d.Get("name").(string)
 
@@ -198,7 +198,7 @@ func resourceDbDelete(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return diags
 	}
 
-	chTableService := resourcetable.CHTableService{ClickhouseConnection: conn}
+	chTableService := resourcetable.CHTableService{Connection: conn}
 	chDBService := CHDBService{CHConnection: conn, CHTableService: &chTableService}
 	dbResources, err := chDBService.GetDBResources(ctx, databaseName)
 

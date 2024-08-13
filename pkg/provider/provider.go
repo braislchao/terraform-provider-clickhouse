@@ -133,6 +133,6 @@ func configure() func(context.Context, *schema.ResourceData) (any, diag.Diagnost
 			return nil, diag.FromErr(fmt.Errorf("ping clickhouse database: %w", err))
 		}
 
-		return &common.ApiClient{ClickhouseConnection: &conn, DefaultCluster: defaultCluster}, diags
+		return &common.Client{Connection: &conn, DefaultCluster: defaultCluster}, diags
 	}
 }

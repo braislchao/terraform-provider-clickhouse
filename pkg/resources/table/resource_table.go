@@ -202,13 +202,13 @@ func ResourceTable() *schema.Resource {
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
+	client := meta.(*common.Client)
+	conn := client.Connection
 
 	database := d.Get("database").(string)
 	tableName := d.Get("name").(string)
 
-	chTableService := CHTableService{ClickhouseConnection: conn}
+	chTableService := CHTableService{Connection: conn}
 	chTable, err := chTableService.GetTable(ctx, database, tableName)
 	if chTable == nil && err == nil {
 		d.SetId("")
@@ -331,10 +331,10 @@ func (t *TableResource) setIndexes(indexes []interface{}) {
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
+	client := meta.(*common.Client)
+	conn := client.Connection
 	tableResource := TableResource{}
-	chTableService := CHTableService{ClickhouseConnection: conn}
+	chTableService := CHTableService{Connection: conn}
 
 	tableResource.Cluster = d.Get("cluster").(string)
 	tableResource.Database = d.Get("database").(string)
@@ -372,9 +372,9 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
-	chTableService := CHTableService{ClickhouseConnection: conn}
+	client := meta.(*common.Client)
+	conn := client.Connection
+	chTableService := CHTableService{Connection: conn}
 
 	var tableResource TableResource
 	tableResource.Database = d.Get("database").(string)
@@ -395,9 +395,9 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
-	chTableService := CHTableService{ClickhouseConnection: conn}
+	client := meta.(*common.Client)
+	conn := client.Connection
+	chTableService := CHTableService{Connection: conn}
 
 	tableResource := TableResource{}
 
