@@ -1,10 +1,11 @@
-package resourceuser
+package resources
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/models"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -42,12 +43,10 @@ func ResourceUser() *schema.Resource {
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*common.Client)
-	conn := client.Connection
-	chUserService := CHUserService{CHConnection: conn}
+	client := meta.(*sdk.Client)
 
 	userName := d.Get("name").(string)
-	user, err := chUserService.GetUser(ctx, userName)
+	user, err := client.GetUser(ctx, userName)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("resource user read: %v", err))
 	}
@@ -66,18 +65,17 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*common.Client)
-	conn := client.Connection
+	client := meta.(*sdk.Client)
 
 	userName := d.Get("name").(string)
 	password := d.Get("password").(string)
 	rolesSet := d.Get("roles").(*schema.Set)
-	chUserService := CHUserService{CHConnection: conn}
-	chUser, err := chUserService.CreateUser(ctx, UserResource{
+	user := models.UserResource{
 		Name:     userName,
 		Password: password,
 		Roles:    rolesSet,
-	})
+	}
+	chUser, err := client.CreateUser(ctx, user)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("resource user create: %v", err))
 	}
@@ -90,20 +88,20 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*common.Client)
-	conn := client.Connection
-	chUserService := CHUserService{CHConnection: conn}
+	client := meta.(*sdk.Client)
 
 	planUserName := d.Get("name").(string)
 	planPassword := d.Get("password").(string)
 	planRoles := d.Get("roles").(*schema.Set)
 
 	// After modify original role grants, we need to update default roles
-	chUser, err := chUserService.UpdateUser(ctx, UserResource{
+	user := models.UserResource{
 		Name:     planUserName,
 		Password: planPassword,
 		Roles:    planRoles,
-	}, d)
+	}
+
+	chUser, err := client.UpdateUser(ctx, user, d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -116,13 +114,11 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*common.Client)
-	conn := client.Connection
-	chUserService := CHUserService{CHConnection: conn}
+	client := meta.(*sdk.Client)
 
 	userName := d.Get("name").(string)
 
-	err := chUserService.DeleteUser(ctx, userName)
+	err := client.DeleteUser(ctx, userName)
 
 	if err != nil {
 		return diag.FromErr(err)

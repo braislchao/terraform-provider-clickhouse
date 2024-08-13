@@ -8,11 +8,8 @@ import (
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/datasources"
-	resourcedb "github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/resources/db"
-	resourcerole "github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/resources/role"
-	resourcetable "github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/resources/table"
-	resourceuser "github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/resources/user"
-	resourceview "github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/resources/view"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/resources"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -78,11 +75,11 @@ func New(version string) func() *schema.Provider {
 				"clickhouse_dbs": datasources.DataSourceDbs(),
 			},
 			ResourcesMap: map[string]*schema.Resource{
-				"clickhouse_db":    resourcedb.ResourceDb(),
-				"clickhouse_table": resourcetable.ResourceTable(),
-				"clickhouse_view":  resourceview.ResourceView(),
-				"clickhouse_role":  resourcerole.ResourceRole(),
-				"clickhouse_user":  resourceuser.ResourceUser(),
+				"clickhouse_db":    resources.ResourceDb(),
+				"clickhouse_table": resources.ResourceTable(),
+				"clickhouse_view":  resources.ResourceView(),
+				"clickhouse_role":  resources.ResourceRole(),
+				"clickhouse_user":  resources.ResourceUser(),
 			},
 			ConfigureContextFunc: configure(),
 		}
@@ -132,6 +129,6 @@ func configure() func(context.Context, *schema.ResourceData) (any, diag.Diagnost
 			return nil, diag.FromErr(fmt.Errorf("ping clickhouse database: %w", err))
 		}
 
-		return &common.Client{Connection: &conn}, diags
+		return &sdk.Client{Connection: &conn}, diags
 	}
 }

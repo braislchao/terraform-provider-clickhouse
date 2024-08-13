@@ -1,19 +1,17 @@
-package resourcedb
+package resources
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
 
-	resourcetable "github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/resources/table"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/sdk"
 
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-type CHTableService common.Client
 
 func ResourceDb() *schema.Resource {
 	return &schema.Resource{
@@ -70,7 +68,7 @@ func ResourceDb() *schema.Resource {
 }
 
 func resourceDbRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*common.Client)
+	client := meta.(*sdk.Client)
 	var diags diag.Diagnostics
 	conn := *client.Connection
 	cluster := d.Get("cluster").(string)
@@ -157,7 +155,7 @@ func resourceDbRead(ctx context.Context, d *schema.ResourceData, meta any) diag.
 }
 
 func resourceDbCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*common.Client)
+	client := meta.(*sdk.Client)
 	var diags diag.Diagnostics
 	conn := *client.Connection
 
@@ -180,7 +178,7 @@ func resourceDbCreate(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 func resourceDbDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 
-	client := meta.(*common.Client)
+	client := meta.(*sdk.Client)
 	var diags diag.Diagnostics
 	conn := client.Connection
 
@@ -195,9 +193,7 @@ func resourceDbDelete(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return diags
 	}
 
-	chTableService := resourcetable.CHTableService{Connection: conn}
-	chDBService := CHDBService{CHConnection: conn, CHTableService: &chTableService}
-	dbResources, err := chDBService.GetDBResources(ctx, databaseName)
+	dbResources, err := client.GetDBResources(ctx, databaseName)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("resource db delete: %v", err))

@@ -1,4 +1,4 @@
-package resourcetable
+package sdk
 
 import (
 	"context"
@@ -7,11 +7,31 @@ import (
 	"strings"
 
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/models"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type CHTableService common.Client
+func (client *Client) GetDBTables(ctx context.Context, database string) ([]models.CHTable, error) {
+	query := fmt.Sprintf("SELECT database, name FROM system.tables where database = '%s'", database)
+	rows, err := (*client.Connection).Query(ctx, query)
+
+	if err != nil {
+		return nil, fmt.Errorf("reading tables from Clickhouse: %v", err)
+	}
+
+	var tables []models.CHTable
+	for rows.Next() {
+		var table models.CHTable
+		err := rows.ScanStruct(&table)
+		if err != nil {
+			return nil, fmt.Errorf("scanning Clickhouse table row: %v", err)
+		}
+		tables = append(tables, table)
+	}
+
+	return tables, nil
+}
 
 func copyToMap(iface interface{}) map[string]interface{} {
 	mapCopy := iface.(map[string]interface{})
@@ -22,11 +42,12 @@ func copyToMap(iface interface{}) map[string]interface{} {
 	return mapNew
 }
 
-func (ts *CHTableService) UpdateTable(ctx context.Context, table TableResource, resourceData *schema.ResourceData) error {
+func (client *Client) UpdateTable(ctx context.Context, table models.TableResource, resourceData *schema.ResourceData) error {
 	clusterStatement := common.GetClusterStatement(table.Cluster)
 
 	if resourceData.HasChange("comment") {
-		err := executeQuery(ctx, ts, fmt.Sprintf("ALTER TABLE %s.%s %s MODIFY COMMENT '%s'", table.Database, table.Name, clusterStatement, table.Comment))
+		query := fmt.Sprintf("ALTER TABLE %s.%s %s MODIFY COMMENT '%s'", table.Database, table.Name, clusterStatement, table.Comment)
+		err := executeQuery(ctx, client, query)
 		if err != nil {
 			return err
 		}
@@ -45,7 +66,7 @@ func (ts *CHTableService) UpdateTable(ctx context.Context, table TableResource, 
 			columnMap := copyToMap(column)
 			columnMap["location"] = location
 
-			err := handleColumnChanges(ctx, ts, table, clusterStatement, columnMap, oldColumnsMap)
+			err := handleColumnChanges(ctx, client, table, clusterStatement, columnMap, oldColumnsMap)
 			if err != nil {
 				return err
 			}
@@ -53,7 +74,7 @@ func (ts *CHTableService) UpdateTable(ctx context.Context, table TableResource, 
 			location = "AFTER " + columnMap["name"].(string)
 		}
 
-		err := dropOldColumns(ctx, ts, table, clusterStatement, oldColumns, newColumnsMap)
+		err := dropOldColumns(ctx, client, table, clusterStatement, oldColumns, newColumnsMap)
 		if err != nil {
 			return err
 		}
@@ -61,9 +82,9 @@ func (ts *CHTableService) UpdateTable(ctx context.Context, table TableResource, 
 	return nil
 }
 
-func executeQuery(ctx context.Context, ts *CHTableService, query string) error {
+func executeQuery(ctx context.Context, client *Client, query string) error {
 	if common.DebugEnabled {
-		formattedQuery, err := formatQuery(ctx, ts, query)
+		formattedQuery, err := formatQuery(ctx, client, query)
 		if err != nil {
 			return err
 		}
@@ -71,17 +92,17 @@ func executeQuery(ctx context.Context, ts *CHTableService, query string) error {
 	}
 
 	// Execute the query
-	err := (*ts.Connection).Exec(ctx, query)
+	err := (*client.Connection).Exec(ctx, query)
 	if err != nil {
 		return fmt.Errorf("executing query: %v", err)
 	}
 	return nil
 }
 
-func formatQuery(ctx context.Context, ts *CHTableService, query string) (string, error) {
+func formatQuery(ctx context.Context, client *Client, query string) (string, error) {
 	escapedQuery := strings.ReplaceAll(query, "'", "''")
 	formatQueryStmt := fmt.Sprintf("SELECT formatQuery('%s')", escapedQuery)
-	row := (*ts.Connection).QueryRow(ctx, formatQueryStmt)
+	row := (*client.Connection).QueryRow(ctx, formatQueryStmt)
 
 	var formattedQueryResult string
 	if err := row.Scan(&formattedQueryResult); err != nil {
@@ -100,27 +121,27 @@ func createColumnsMap(columns []interface{}) map[string]map[string]interface{} {
 	return columnsMap
 }
 
-func handleColumnChanges(ctx context.Context, ts *CHTableService, table TableResource, clusterStatement string, columnMap map[string]interface{}, oldColumnsMap map[string]map[string]interface{}) error {
+func handleColumnChanges(ctx context.Context, client *Client, table models.TableResource, clusterStatement string, columnMap map[string]interface{}, oldColumnsMap map[string]map[string]interface{}) error {
 	columnName := columnMap["name"].(string)
 	if _, exists := oldColumnsMap[columnName]; !exists {
-		return executeQuery(ctx, ts, fmt.Sprintf(
+		return executeQuery(ctx, client, fmt.Sprintf(
 			"ALTER TABLE %s.%s %s ADD COLUMN %s %s %s %s %s %s",
 			table.Database, table.Name, clusterStatement, columnMap["name"], columnMap["type"], columnMap["default_kind"],
 			columnMap["default_expression"], columnMap["comment"].(string), columnMap["location"]))
 	} else {
 		oldColumn := oldColumnsMap[columnName]
 		if oldColumn["type"] != columnMap["type"] {
-			return executeQuery(ctx, ts, fmt.Sprintf(
+			return executeQuery(ctx, client, fmt.Sprintf(
 				"ALTER TABLE %s.%s %s MODIFY COLUMN %s %s",
 				table.Database, table.Name, clusterStatement, columnMap["name"], columnMap["type"]))
 		}
 		if oldColumn["comment"] != columnMap["comment"] {
-			return executeQuery(ctx, ts, fmt.Sprintf(
+			return executeQuery(ctx, client, fmt.Sprintf(
 				"ALTER TABLE %s.%s %s COMMENT COLUMN %s '%s'",
 				table.Database, table.Name, clusterStatement, columnMap["name"], columnMap["comment"]))
 		}
 		if oldColumn["default_kind"] != columnMap["default_kind"] || oldColumn["default_expression"] != columnMap["default_expression"] {
-			return executeQuery(ctx, ts, fmt.Sprintf(
+			return executeQuery(ctx, client, fmt.Sprintf(
 				"ALTER TABLE %s.%s %s MODIFY COLUMN %s %s %s",
 				table.Database, table.Name, clusterStatement, columnMap["name"], columnMap["default_kind"], columnMap["default_expression"]))
 		}
@@ -128,11 +149,11 @@ func handleColumnChanges(ctx context.Context, ts *CHTableService, table TableRes
 	return nil
 }
 
-func dropOldColumns(ctx context.Context, ts *CHTableService, table TableResource, clusterStatement string, oldColumns []interface{}, newColumnsMap map[string]map[string]interface{}) error {
+func dropOldColumns(ctx context.Context, client *Client, table models.TableResource, clusterStatement string, oldColumns []interface{}, newColumnsMap map[string]map[string]interface{}) error {
 	for _, column := range oldColumns {
 		columnMap := column.(map[string]interface{})
 		if _, exists := newColumnsMap[columnMap["name"].(string)]; !exists {
-			err := executeQuery(ctx, ts, fmt.Sprintf(
+			err := executeQuery(ctx, client, fmt.Sprintf(
 				"ALTER TABLE %s.%s %s DROP COLUMN %s",
 				table.Database, table.Name, clusterStatement, columnMap["name"]))
 			if err != nil {
@@ -143,36 +164,15 @@ func dropOldColumns(ctx context.Context, ts *CHTableService, table TableResource
 	return nil
 }
 
-func (ts *CHTableService) GetDBTables(ctx context.Context, database string) ([]CHTable, error) {
-	query := fmt.Sprintf("SELECT database, name FROM system.tables where database = '%s'", database)
-	rows, err := (*ts.Connection).Query(ctx, query)
-
-	if err != nil {
-		return nil, fmt.Errorf("reading tables from Clickhouse: %v", err)
-	}
-
-	var tables []CHTable
-	for rows.Next() {
-		var table CHTable
-		err := rows.ScanStruct(&table)
-		if err != nil {
-			return nil, fmt.Errorf("scanning Clickhouse table row: %v", err)
-		}
-		tables = append(tables, table)
-	}
-
-	return tables, nil
-}
-
-func (ts *CHTableService) GetTable(ctx context.Context, database string, table string) (*CHTable, error) {
+func (client *Client) GetTable(ctx context.Context, database string, table string) (*models.CHTable, error) {
 	query := fmt.Sprintf("SELECT database, name, engine_full, engine, comment FROM system.tables where database = '%s' and name = '%s'", database, table)
-	row := (*ts.Connection).QueryRow(ctx, query)
+	row := (*client.Connection).QueryRow(ctx, query)
 
 	if row.Err() != nil {
 		return nil, fmt.Errorf("reading table from Clickhouse: %v", row.Err())
 	}
 
-	var chTable CHTable
+	var chTable models.CHTable
 	err := row.ScanStruct(&chTable)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -181,12 +181,12 @@ func (ts *CHTableService) GetTable(ctx context.Context, database string, table s
 		return nil, fmt.Errorf("scanning Clickhouse table row: %v", err)
 	}
 
-	chTable.Columns, err = ts.getTableColumns(ctx, database, table)
+	chTable.Columns, err = client.getTableColumns(ctx, database, table)
 	if err != nil {
 		return nil, fmt.Errorf("getting columns for Clickhouse table: %v", err)
 	}
 
-	chTable.Indexes, err = ts.getTableIndexes(ctx, database, table)
+	chTable.Indexes, err = client.getTableIndexes(ctx, database, table)
 	if err != nil {
 		return nil, fmt.Errorf("getting indexes for Clickhouse table: %v", err)
 	}
@@ -194,21 +194,21 @@ func (ts *CHTableService) GetTable(ctx context.Context, database string, table s
 	return &chTable, nil
 }
 
-func (ts *CHTableService) getTableIndexes(ctx context.Context, database string, table string) ([]CHIndex, error) {
+func (client *Client) getTableIndexes(ctx context.Context, database string, table string) ([]models.CHIndex, error) {
 	query := fmt.Sprintf(
 		"SELECT name, expr, type, granularity FROM system.data_skipping_indices WHERE database = '%s' AND table = '%s'",
 		database,
 		table,
 	)
-	rows, err := (*ts.Connection).Query(ctx, query)
+	rows, err := (*client.Connection).Query(ctx, query)
 
 	if err != nil {
 		return nil, fmt.Errorf("reading indexes from Clickhouse: %v", err)
 	}
 
-	var chIndexes []CHIndex
+	var chIndexes []models.CHIndex
 	for rows.Next() {
-		var index CHIndex
+		var index models.CHIndex
 		err := rows.ScanStruct(&index)
 		if err != nil {
 			return nil, fmt.Errorf("scanning Clickhouse index row: %v", err)
@@ -218,21 +218,21 @@ func (ts *CHTableService) getTableIndexes(ctx context.Context, database string, 
 	return chIndexes, nil
 }
 
-func (ts *CHTableService) getTableColumns(ctx context.Context, database string, table string) ([]CHColumn, error) {
+func (client *Client) getTableColumns(ctx context.Context, database string, table string) ([]models.CHColumn, error) {
 	query := fmt.Sprintf(
 		"SELECT database, table, name, type, comment, default_kind, default_expression FROM system.columns WHERE database = '%s' AND table = '%s'",
 		database,
 		table,
 	)
-	rows, err := (*ts.Connection).Query(ctx, query)
+	rows, err := (*client.Connection).Query(ctx, query)
 
 	if err != nil {
 		return nil, fmt.Errorf("reading columns from Clickhouse: %v", err)
 	}
 
-	var chColumns []CHColumn
+	var chColumns []models.CHColumn
 	for rows.Next() {
-		var column CHColumn
+		var column models.CHColumn
 		err := rows.ScanStruct(&column)
 		if err != nil {
 			return nil, fmt.Errorf("scanning Clickhouse column row: %v", err)
@@ -242,12 +242,12 @@ func (ts *CHTableService) getTableColumns(ctx context.Context, database string, 
 	return chColumns, nil
 }
 
-func (ts *CHTableService) CreateTable(ctx context.Context, tableResource TableResource) error {
-	query := buildCreateOnClusterSentence(tableResource)
-	return executeQuery(ctx, ts, query)
+func (client *Client) CreateTable(ctx context.Context, tableResource models.TableResource) error {
+	query := buildCreateTableOnClusterSentence(tableResource)
+	return executeQuery(ctx, client, query)
 }
 
-func (ts *CHTableService) DeleteTable(ctx context.Context, tableResource TableResource) error {
+func (client *Client) DeleteTable(ctx context.Context, tableResource models.TableResource) error {
 	query := fmt.Sprintf("DROP TABLE IF EXISTS %s.%s %s", tableResource.Database, tableResource.Name, common.GetClusterStatement(tableResource.Cluster))
-	return executeQuery(ctx, ts, query)
+	return executeQuery(ctx, client, query)
 }

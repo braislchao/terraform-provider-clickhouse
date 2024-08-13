@@ -1,4 +1,4 @@
-package resourcetable
+package models
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
-// -- begin DB read() types --
 type CHTable struct {
 	Database   string     `ch:"database"`
 	Name       string     `ch:"name"`
@@ -36,9 +35,6 @@ type CHColumn struct {
 	DefaultExpression string `ch:"default_expression"`
 }
 
-// -- end DB read() types --
-
-// -- built from DB read, and from tf definition code --
 type TableResource struct {
 	Database     string
 	Name         string
@@ -76,8 +72,6 @@ type PartitionByResource struct {
 	PartitionFunction string
 	Mod               string
 }
-
-// -- end parsed types --
 
 func (t *CHTable) IndexesToResource() []IndexDefinition {
 	indexResources := make([]IndexDefinition, len(t.Indexes))

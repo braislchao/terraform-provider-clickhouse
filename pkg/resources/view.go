@@ -1,4 +1,4 @@
-package resourceview
+package resources
 
 import (
 	"bufio"
@@ -7,6 +7,8 @@ import (
 	"os"
 
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/models"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -77,14 +79,12 @@ func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	var diags diag.Diagnostics
 
-	client := meta.(*common.Client)
-	conn := client.Connection
-
+	client := meta.(*sdk.Client)
 	database := d.Get("database").(string)
 	viewName := d.Get("name").(string)
 
-	chViewService := CHViewService{CHConnection: conn}
-	chView, err := chViewService.GetView(ctx, database, viewName)
+	chView, err := client.GetView(ctx, database, viewName)
+
 	if chView == nil && err == nil {
 		d.SetId("")
 		return nil
@@ -129,10 +129,8 @@ func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 }
 
 func resourceViewCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*common.Client)
-	conn := client.Connection
-	viewResource := ViewResource{}
-	chViewService := CHViewService{CHConnection: conn}
+	client := meta.(*sdk.Client)
+	viewResource := models.ViewResource{}
 
 	viewResource.Cluster = d.Get("cluster").(string)
 	viewResource.Database = d.Get("database").(string)
@@ -147,7 +145,7 @@ func resourceViewCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		return diags
 	}
 
-	err := chViewService.CreateView(ctx, viewResource)
+	err := client.CreateView(ctx, viewResource)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -160,16 +158,14 @@ func resourceViewCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 func resourceViewDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*common.Client)
-	conn := client.Connection
-	chViewService := CHViewService{CHConnection: conn}
+	client := meta.(*sdk.Client)
 
-	var viewResource ViewResource
+	var viewResource models.ViewResource
 	viewResource.Database = d.Get("database").(string)
 	viewResource.Name = d.Get("name").(string)
 	viewResource.Cluster = d.Get("cluster").(string)
 
-	err := chViewService.DeleteView(ctx, viewResource)
+	err := client.DeleteView(ctx, viewResource)
 
 	if err != nil {
 		return diag.FromErr(err)

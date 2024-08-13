@@ -1,13 +1,14 @@
-package resourcetable
+package sdk
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/models"
 )
 
-func buildColumnsSentence(cols []ColumnDefinition) []string {
+func buildColumnsSentence(cols []models.ColumnDefinition) []string {
 	outColumn := make([]string, 0)
 	for _, col := range cols {
 		outColumn = append(outColumn, fmt.Sprintf("\t `%s` %s %s %s %s", col.Name, col.Type, col.DefaultKind, col.DefaultExpression, getComment(col.Comment)))
@@ -15,7 +16,7 @@ func buildColumnsSentence(cols []ColumnDefinition) []string {
 	return outColumn
 }
 
-func buildIndexesSentence(indexes []IndexDefinition) []string {
+func buildIndexesSentence(indexes []models.IndexDefinition) []string {
 	outIndexes := make([]string, 0)
 	for _, index := range indexes {
 		indexStatement := fmt.Sprintf("INDEX %s %s TYPE %s", index.Name, index.Expression, index.Type)
@@ -34,7 +35,7 @@ func getComment(comment string) string {
 	return ""
 }
 
-func buildPartitionBySentence(partitionBy []PartitionByResource) string {
+func buildPartitionBySentence(partitionBy []models.PartitionByResource) string {
 	if len(partitionBy) > 0 {
 		partitionBySentenceItems := make([]string, 0)
 		for _, partitionByItem := range partitionBy {
@@ -88,7 +89,7 @@ func buildTTLSentence(ttl map[string]string) string {
 	return ""
 }
 
-func buildCreateOnClusterSentence(resource TableResource) (query string) {
+func buildCreateTableOnClusterSentence(resource models.TableResource) (query string) {
 	createStatement := common.GetCreateStatement("table")
 
 	columnsStatement := ""
@@ -123,5 +124,34 @@ func buildCreateOnClusterSentence(resource TableResource) (query string) {
 		buildSettingsSentence(resource.Settings),
 		resource.Comment,
 	)
+	return ret
+}
+
+func GetIndexes(indexes []models.IndexDefinition) []map[string]interface{} {
+	var ret []map[string]interface{}
+
+	for _, index := range indexes {
+		ret = append(ret, map[string]interface{}{
+			"name":        index.Name,
+			"expression":  index.Expression,
+			"type":        index.Type,
+			"granularity": index.Granularity,
+		})
+	}
+	return ret
+}
+
+func GetColumns(columns []models.ColumnDefinition) []map[string]interface{} {
+	var ret []map[string]interface{}
+
+	for _, column := range columns {
+		ret = append(ret, map[string]interface{}{
+			"name":               column.Name,
+			"type":               column.Type,
+			"comment":            column.Comment,
+			"default_kind":       column.DefaultKind,
+			"default_expression": column.DefaultExpression,
+		})
+	}
 	return ret
 }

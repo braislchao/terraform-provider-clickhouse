@@ -1,4 +1,4 @@
-package resourcetable
+package resources
 
 import (
 	"fmt"

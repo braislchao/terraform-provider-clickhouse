@@ -1,30 +1,26 @@
-package resourceuser
+package sdk
 
 import (
 	"context"
 	"fmt"
 	"strings"
 
-	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type CHUserService struct {
-	CHConnection *driver.Conn
-}
-
-func (us *CHUserService) GetUser(ctx context.Context, userName string) (*CHUser, error) {
+func (client *Client) GetUser(ctx context.Context, userName string) (*models.CHUser, error) {
 	roleQuery := fmt.Sprintf("SELECT name, default_roles_list FROM system.users WHERE name = '%s'", userName)
 
-	rows, err := (*us.CHConnection).Query(ctx, roleQuery)
+	rows, err := (*client.Connection).Query(ctx, roleQuery)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching user: %s", err)
 	}
 	if !rows.Next() {
 		return nil, nil
 	}
-	var chUser CHUser
+	var chUser models.CHUser
 	err = rows.ScanStruct(&chUser)
 	if err != nil {
 		return nil, fmt.Errorf("error scanning user: %s", err)
@@ -33,7 +29,7 @@ func (us *CHUserService) GetUser(ctx context.Context, userName string) (*CHUser,
 	return &chUser, nil
 }
 
-func (us *CHUserService) CreateUser(ctx context.Context, userPlan UserResource) (*CHUser, error) {
+func (client *Client) CreateUser(ctx context.Context, userPlan models.UserResource) (*models.CHUser, error) {
 	var rolesList []string
 
 	for _, role := range userPlan.Roles.List() {
@@ -48,17 +44,17 @@ func (us *CHUserService) CreateUser(ctx context.Context, userPlan UserResource) 
 	if len(rolesList) > 0 {
 		query = fmt.Sprintf("%s DEFAULT ROLE %s", query, strings.Join(rolesList, ","))
 	}
-	err := (*us.CHConnection).Exec(ctx, query)
+	err := (*client.Connection).Exec(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("error creating user: %s", err)
 	}
-	return us.GetUser(ctx, userPlan.Name)
+	return client.GetUser(ctx, userPlan.Name)
 }
 
-func (us *CHUserService) UpdateUser(ctx context.Context, userPlan UserResource, resourceData *schema.ResourceData) (*CHUser, error) {
-	conn := *us.CHConnection
+func (client *Client) UpdateUser(ctx context.Context, userPlan models.UserResource, resourceData *schema.ResourceData) (*models.CHUser, error) {
+	conn := *client.Connection
 	stateUserName, _ := resourceData.GetChange("name")
-	user, err := us.GetUser(ctx, stateUserName.(string))
+	user, err := client.GetUser(ctx, stateUserName.(string))
 	if err != nil {
 		return nil, fmt.Errorf("error fetching user: %s", err)
 	}
@@ -130,9 +126,9 @@ func (us *CHUserService) UpdateUser(ctx context.Context, userPlan UserResource, 
 		return nil, fmt.Errorf("error updating user: %s", err)
 	}
 
-	return us.GetUser(ctx, userPlan.Name)
+	return client.GetUser(ctx, userPlan.Name)
 }
 
-func (us *CHUserService) DeleteUser(ctx context.Context, name string) error {
-	return (*us.CHConnection).Exec(ctx, fmt.Sprintf("DROP USER %s", name))
+func (client *Client) DeleteUser(ctx context.Context, name string) error {
+	return (*client.Connection).Exec(ctx, fmt.Sprintf("DROP USER %s", name))
 }
