@@ -193,14 +193,14 @@ func resourceDbDelete(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return diags
 	}
 
-	dbResources, err := client.GetDBResources(ctx, databaseName)
+	tables, err := client.GetDBTables(ctx, databaseName)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("resource db delete: %v", err))
 	}
-	if len(dbResources.CHTables) > 0 {
+	if len(tables) > 0 {
 		var tableNames []string
-		for _, table := range dbResources.CHTables {
+		for _, table := range tables {
 			tableNames = append(tableNames, table.Name)
 		}
 		diags = append(diags, diag.Diagnostic{
