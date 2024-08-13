@@ -86,8 +86,8 @@ func resourceDbRead(ctx context.Context, d *schema.ResourceData, meta any) diag.
 
 	err := row.Scan(&name, &engine, &dataPath, &metadataPath, &uuid, &comment)
 	if err != nil {
+		// If no rows were returned, treat this as a "new" resource that needs to be created
 		if err == sql.ErrNoRows {
-			// If no rows were returned, treat this as a "new" resource that needs to be created
 			d.SetId("")
 			return diags
 		}

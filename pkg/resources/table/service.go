@@ -2,6 +2,7 @@ package resourcetable
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -173,7 +174,7 @@ func (ts *CHTableService) GetTable(ctx context.Context, database string, table s
 
 	var chTable CHTable
 	err := row.ScanStruct(&chTable)
-	if err != nil && strings.Contains(err.Error(), "no rows in result set") {
+	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
