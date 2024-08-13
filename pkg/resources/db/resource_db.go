@@ -2,6 +2,7 @@ package resourcedb
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	resourcetable "github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/resources/table"
@@ -85,6 +86,11 @@ func resourceDbRead(ctx context.Context, d *schema.ResourceData, meta any) diag.
 
 	err := row.Scan(&name, &engine, &dataPath, &metadataPath, &uuid, &comment)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			// If no rows were returned, treat this as a "new" resource that needs to be created
+			d.SetId("")
+			return diags
+		}
 		return diag.FromErr(fmt.Errorf("scanning Clickhouse DB row: %v", err))
 	}
 
