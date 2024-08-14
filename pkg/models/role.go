@@ -1,4 +1,4 @@
-package resourcerole
+package models
 
 import (
 	"fmt"
@@ -24,6 +24,14 @@ type RoleResource struct {
 	Privileges *schema.Set
 }
 
+func (r *CHRole) GetPrivilegesList() []string {
+	var privileges []string
+	for _, privilege := range r.Privileges {
+		privileges = append(privileges, privilege.AccessType)
+	}
+	return privileges
+}
+
 func (r *CHRole) ToRoleResource() (*RoleResource, error) {
 	var database string
 	var privileges []string
@@ -36,12 +44,4 @@ func (r *CHRole) ToRoleResource() (*RoleResource, error) {
 	}
 
 	return &RoleResource{Name: r.Name, Database: database, Privileges: common.StringListToSet(privileges)}, nil
-}
-
-func (r *CHRole) GetPrivilegesList() []string {
-	var privileges []string
-	for _, privilege := range r.Privileges {
-		privileges = append(privileges, privilege.AccessType)
-	}
-	return privileges
 }

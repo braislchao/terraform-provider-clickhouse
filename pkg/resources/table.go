@@ -1,10 +1,12 @@
-package resourcetable
+package resources
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/models"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -202,14 +204,11 @@ func ResourceTable() *schema.Resource {
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
-
+	c := meta.(*sdk.Client)
 	database := d.Get("database").(string)
 	tableName := d.Get("name").(string)
 
-	chTableService := CHTableService{ClickhouseConnection: conn}
-	chTable, err := chTableService.GetTable(ctx, database, tableName)
+	chTable, err := c.GetTable(ctx, database, tableName)
 	if chTable == nil && err == nil {
 		d.SetId("")
 		return nil
@@ -259,11 +258,11 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		}
 	}
 	// not set - partition_by
-	if err := d.Set("column", getColumns(tableResource.Columns)); err != nil {
+	if err := d.Set("column", c.GetColumnDefintions(tableResource.Columns)); err != nil {
 		return diag.FromErr(fmt.Errorf("setting column: %v", err))
 	}
 	if tableResource.Indexes != nil {
-		if err := d.Set("index", getIndexes(tableResource.Indexes)); err != nil {
+		if err := d.Set("index", c.GetIndexDefintions(tableResource.Indexes)); err != nil {
 			return diag.FromErr(fmt.Errorf("setting indexes: %v", err))
 		}
 	}
@@ -274,73 +273,17 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	return diags
 }
 
-func getIndexes(indexes []IndexDefinition) []map[string]interface{} {
-	var ret []map[string]interface{}
-
-	for _, index := range indexes {
-		ret = append(ret, map[string]interface{}{
-			"name":        index.Name,
-			"expression":  index.Expression,
-			"type":        index.Type,
-			"granularity": index.Granularity,
-		})
-	}
-	return ret
-}
-
-func getColumns(columns []ColumnDefinition) []map[string]interface{} {
-	var ret []map[string]interface{}
-
-	for _, column := range columns {
-		ret = append(ret, map[string]interface{}{
-			"name":               column.Name,
-			"type":               column.Type,
-			"comment":            column.Comment,
-			"default_kind":       column.DefaultKind,
-			"default_expression": column.DefaultExpression,
-		})
-	}
-	return ret
-}
-
-func (t *TableResource) setColumns(columns []interface{}) {
-	for _, column := range columns {
-		columnDefinition := ColumnDefinition{
-			Name:              column.(map[string]interface{})["name"].(string),
-			Type:              column.(map[string]interface{})["type"].(string),
-			Comment:           column.(map[string]interface{})["comment"].(string),
-			DefaultKind:       column.(map[string]interface{})["default_kind"].(string),
-			DefaultExpression: column.(map[string]interface{})["default_expression"].(string),
-		}
-		t.Columns = append(t.Columns, columnDefinition)
-	}
-}
-
-func (t *TableResource) setIndexes(indexes []interface{}) {
-	for _, index := range indexes {
-		indexDefinition := IndexDefinition{
-			Name:        index.(map[string]interface{})["name"].(string),
-			Expression:  index.(map[string]interface{})["expression"].(string),
-			Type:        index.(map[string]interface{})["type"].(string),
-			Granularity: uint64(index.(map[string]interface{})["granularity"].(int)),
-		}
-		t.Indexes = append(t.Indexes, indexDefinition)
-	}
-}
-
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
-	tableResource := TableResource{}
-	chTableService := CHTableService{ClickhouseConnection: conn}
+	c := meta.(*sdk.Client)
+	tableResource := models.TableResource{}
 
 	tableResource.Cluster = d.Get("cluster").(string)
 	tableResource.Database = d.Get("database").(string)
 	tableResource.Name = d.Get("name").(string)
-	tableResource.setColumns(d.Get("column").([]interface{}))
-	tableResource.setIndexes(d.Get("index").([]interface{}))
+	tableResource.SetColumns(d.Get("column").([]interface{}))
+	tableResource.SetIndexes(d.Get("index").([]interface{}))
 	tableResource.Engine = d.Get("engine").(string)
 	tableResource.Comment = d.Get("comment").(string)
 	tableResource.EngineParams = common.MapArrayInterfaceToArrayOfStrings(d.Get("engine_params").([]interface{}))
@@ -350,16 +293,12 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	tableResource.Settings = common.MapInterfaceToMapOfString(d.Get("settings").(map[string]interface{}))
 	tableResource.TTL = common.MapInterfaceToMapOfString(d.Get("ttl").(map[string]interface{}))
 
-	if tableResource.Cluster == "" {
-		tableResource.Cluster = client.DefaultCluster
-	}
-
 	tableResource.Validate(diags)
 	if diags.HasError() {
 		return diags
 	}
 
-	err := chTableService.CreateTable(ctx, tableResource)
+	err := c.CreateTable(ctx, tableResource)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -372,19 +311,14 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
-	chTableService := CHTableService{ClickhouseConnection: conn}
+	c := meta.(*sdk.Client)
 
-	var tableResource TableResource
+	var tableResource models.TableResource
 	tableResource.Database = d.Get("database").(string)
 	tableResource.Name = d.Get("name").(string)
 	tableResource.Cluster = d.Get("cluster").(string)
-	if tableResource.Cluster == "" {
-		tableResource.Cluster = client.DefaultCluster
-	}
 
-	err := chTableService.DeleteTable(ctx, tableResource)
+	err := c.DeleteTable(ctx, tableResource)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -394,20 +328,17 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	c := meta.(*sdk.Client)
 
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
-	chTableService := CHTableService{ClickhouseConnection: conn}
-
-	tableResource := TableResource{}
+	tableResource := models.TableResource{}
 
 	tableResource.Database = d.Get("database").(string)
 	tableResource.Name = d.Get("name").(string)
 	tableResource.Cluster = d.Get("cluster").(string)
-	tableResource.setColumns(d.Get("column").([]interface{}))
+	tableResource.SetColumns(d.Get("column").([]interface{}))
 	tableResource.Comment = d.Get("comment").(string)
 
-	err := chTableService.UpdateTable(ctx, tableResource, d)
+	err := c.UpdateTable(ctx, tableResource, d)
 	if err != nil {
 		return diag.FromErr(err)
 	}

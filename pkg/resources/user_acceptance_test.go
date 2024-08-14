@@ -1,4 +1,4 @@
-package resourceuser_test
+package resources_test
 
 import (
 	"context"
@@ -7,15 +7,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
-	resourceuser "github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/resources/user"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/testutils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-type TestStepData struct {
+type TestUserStepData struct {
 	userName string
 	password string
 	roles    []string
@@ -27,18 +26,18 @@ const password1 = "test_user_password_1"
 const password2 = "test_user_password_2"
 const userName1 = "test_user_1"
 const userName2 = "test_user_2"
-const roleName1 = "test_user_role_1"
-const roleName2 = "test_user_role_2"
-const roleName3 = "test_user_role_3"
+const userRoleName1 = "test_user_role_1"
+const userRoleName2 = "test_user_role_2"
+const userRoleName3 = "test_user_role_3"
 
-var testStepsData = []TestStepData{
+var testStepsData = []TestUserStepData{
 	{
 		// Create user
 		userName: userName1,
 		password: password1,
 		roles: []string{
-			roleName1,
-			roleName2,
+			userRoleName1,
+			userRoleName2,
 		},
 	},
 	{
@@ -46,8 +45,8 @@ var testStepsData = []TestStepData{
 		userName: userName1,
 		password: password2,
 		roles: []string{
-			roleName1,
-			roleName2,
+			userRoleName1,
+			userRoleName2,
 		},
 	},
 	{
@@ -55,8 +54,8 @@ var testStepsData = []TestStepData{
 		userName: userName1,
 		password: password1,
 		roles: []string{
-			roleName1,
-			roleName3,
+			userRoleName1,
+			userRoleName3,
 		},
 	},
 	{
@@ -64,8 +63,8 @@ var testStepsData = []TestStepData{
 		userName: userName2,
 		password: password1,
 		roles: []string{
-			roleName1,
-			roleName3,
+			userRoleName1,
+			userRoleName3,
 		},
 	},
 	{
@@ -73,12 +72,12 @@ var testStepsData = []TestStepData{
 		userName: userName1,
 		password: password2,
 		roles: []string{
-			roleName2,
+			userRoleName2,
 		},
 	},
 }
 
-func generateTestSteps() []resource.TestStep {
+func generateUserTestSteps() []resource.TestStep {
 	var testSteps []resource.TestStep
 	for _, testStepData := range testStepsData {
 		testSteps = append(testSteps, resource.TestStep{
@@ -106,12 +105,12 @@ func generateTestSteps() []resource.TestStep {
 	return testSteps
 }
 
-func TestAccResourceRole(t *testing.T) {
+func TestAccResourceUserRole(t *testing.T) {
 	// Feature tests
 	resource.Test(t, resource.TestCase{
 		Providers:    testutils.Provider(),
 		CheckDestroy: testAccCheckUserResourceDestroy([]string{userName1, userName2}),
-		Steps:        generateTestSteps(),
+		Steps:        generateUserTestSteps(),
 	})
 }
 
@@ -136,7 +135,7 @@ func testAccUserResource(userName string, password string, roles []string) strin
 		database = clickhouse_db.test_user_db.name
 		privileges = ["SELECT"]
 	}
-`, roleName1, roleName2, roleName3)
+`, userRoleName1, userRoleName2, userRoleName3)
 
 	roleResourceRefs := make([]string, len(roles))
 	for i, role := range roles {
@@ -156,19 +155,15 @@ func testAccUserResource(userName string, password string, roles []string) strin
 
 func testAccCheckUserResourceExists(userName string, roles []string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		client := testutils.TestAccProvider.Meta().(*common.ApiClient)
-		conn := client.ClickhouseConnection
-		chUserService := resourceuser.CHUserService{CHConnection: conn}
+		c := testutils.TestAccProvider.Meta().(*sdk.Client)
 
-		dbUser, err := chUserService.GetUser(context.Background(), userName)
+		dbUser, err := c.GetUser(context.Background(), userName)
 		if err != nil {
 			return fmt.Errorf("get user: %v", err)
 		}
+
 		userResource := dbUser.ToUserResource()
 
-		if err != nil {
-			return fmt.Errorf("get user: %v", err)
-		}
 		if dbUser == nil {
 			return fmt.Errorf("user %s not found", userName)
 		}
@@ -190,10 +185,8 @@ func testAccCheckUserResourceExists(userName string, roles []string) resource.Te
 func testAccCheckUserResourceDestroy(userNames []string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		for _, userName := range userNames {
-			client := testutils.TestAccProvider.Meta().(*common.ApiClient)
-			conn := client.ClickhouseConnection
-			chUserService := resourceuser.CHUserService{CHConnection: conn}
-			dbRole, err := chUserService.GetUser(context.Background(), userName)
+			c := testutils.TestAccProvider.Meta().(*sdk.Client)
+			dbRole, err := c.GetUser(context.Background(), userName)
 
 			if err != nil {
 				return fmt.Errorf("get user: %v", err)

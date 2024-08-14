@@ -1,12 +1,13 @@
-package resourceview
+package sdk
 
 import (
 	"fmt"
 
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/models"
 )
 
-func buildCreateOnClusterSentence(resource ViewResource) (query string) {
+func buildCreateOnClusterSentence(resource models.ViewResource) (query string) {
 	clusterStatement := common.GetClusterStatement(resource.Cluster)
 
 	ret := fmt.Sprintf(

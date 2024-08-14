@@ -1,4 +1,4 @@
-package resourcerole
+package resources
 
 import (
 	"fmt"

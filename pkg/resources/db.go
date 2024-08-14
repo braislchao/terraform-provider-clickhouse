@@ -1,19 +1,17 @@
-package resourcedb
+package resources
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
 
-	resourcetable "github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/resources/table"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/sdk"
 
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-type CHTableService common.ApiClient
 
 func ResourceDb() *schema.Resource {
 	return &schema.Resource{
@@ -70,13 +68,12 @@ func ResourceDb() *schema.Resource {
 }
 
 func resourceDbRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*common.ApiClient)
+	c := meta.(*sdk.Client)
 	var diags diag.Diagnostics
-	conn := *client.ClickhouseConnection
 	cluster := d.Get("cluster").(string)
 
 	database_name := d.Get("name").(string)
-	row := conn.QueryRow(ctx, fmt.Sprintf("SELECT name, engine, data_path, metadata_path, uuid, comment FROM system.databases where name = '%v'", database_name))
+	row := c.Conn.QueryRow(ctx, fmt.Sprintf("SELECT name, engine, data_path, metadata_path, uuid, comment FROM system.databases where name = '%v'", database_name))
 
 	if row.Err() != nil {
 		return diag.FromErr(fmt.Errorf("reading database from Clickhouse: %v", row.Err()))
@@ -157,21 +154,17 @@ func resourceDbRead(ctx context.Context, d *schema.ResourceData, meta any) diag.
 }
 
 func resourceDbCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*common.ApiClient)
+	c := meta.(*sdk.Client)
 	var diags diag.Diagnostics
-	conn := *client.ClickhouseConnection
 
 	cluster, _ := d.Get("cluster").(string)
-	if cluster == "" {
-		cluster = client.DefaultCluster
-	}
 	clusterStatement := common.GetClusterStatement(cluster)
 	databaseName := d.Get("name").(string)
 	comment := d.Get("comment").(string)
 	createStatement := common.GetCreateStatement("database")
 
 	query := fmt.Sprintf("%s %v %v COMMENT '%v'", createStatement, databaseName, clusterStatement, comment)
-	err := conn.Exec(ctx, query)
+	err := c.Conn.Exec(ctx, query)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -182,10 +175,8 @@ func resourceDbCreate(ctx context.Context, d *schema.ResourceData, meta any) dia
 }
 
 func resourceDbDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-
-	client := meta.(*common.ApiClient)
+	c := meta.(*sdk.Client)
 	var diags diag.Diagnostics
-	conn := client.ClickhouseConnection
 
 	databaseName := d.Get("name").(string)
 
@@ -198,16 +189,14 @@ func resourceDbDelete(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return diags
 	}
 
-	chTableService := resourcetable.CHTableService{ClickhouseConnection: conn}
-	chDBService := CHDBService{CHConnection: conn, CHTableService: &chTableService}
-	dbResources, err := chDBService.GetDBResources(ctx, databaseName)
+	tables, err := c.GetDBTables(ctx, databaseName)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("resource db delete: %v", err))
 	}
-	if len(dbResources.CHTables) > 0 {
+	if len(tables) > 0 {
 		var tableNames []string
-		for _, table := range dbResources.CHTables {
+		for _, table := range tables {
 			tableNames = append(tableNames, table.Name)
 		}
 		diags = append(diags, diag.Diagnostic{
@@ -219,14 +208,11 @@ func resourceDbDelete(ctx context.Context, d *schema.ResourceData, meta any) dia
 	}
 
 	cluster, _ := d.Get("cluster").(string)
-	if cluster == "" {
-		cluster = client.DefaultCluster
-	}
 	clusterStatement := common.GetClusterStatement(cluster)
 
 	query := fmt.Sprintf("DROP DATABASE %v %v SYNC", databaseName, clusterStatement)
 
-	err = (*conn).Exec(ctx, query)
+	err = c.Conn.Exec(ctx, query)
 	if err != nil {
 		return diag.FromErr(err)
 	}

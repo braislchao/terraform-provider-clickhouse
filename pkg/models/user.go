@@ -1,4 +1,4 @@
-package resourceuser
+package models
 
 import (
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"

@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -60,11 +60,10 @@ func DataSourceDbs() *schema.Resource {
 }
 
 func dataSourceDbsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*common.ApiClient)
+	c := meta.(*sdk.Client)
 	var diags diag.Diagnostics
-	conn := *client.ClickhouseConnection
 
-	rows, err := conn.Query(ctx, "SELECT name, engine, data_path, metadata_path, uuid, comment FROM system.databases")
+	rows, err := c.Conn.Query(ctx, "SELECT name, engine, data_path, metadata_path, uuid, comment FROM system.databases")
 	if err != nil {
 		return diag.FromErr(err)
 	}

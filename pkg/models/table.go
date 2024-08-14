@@ -1,4 +1,4 @@
-package resourcetable
+package models
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
-// -- begin DB read() types --
 type CHTable struct {
 	Database   string     `ch:"database"`
 	Name       string     `ch:"name"`
@@ -36,9 +35,6 @@ type CHColumn struct {
 	DefaultExpression string `ch:"default_expression"`
 }
 
-// -- end DB read() types --
-
-// -- built from DB read, and from tf definition code --
 type TableResource struct {
 	Database     string
 	Name         string
@@ -76,8 +72,6 @@ type PartitionByResource struct {
 	PartitionFunction string
 	Mod               string
 }
-
-// -- end parsed types --
 
 func (t *CHTable) IndexesToResource() []IndexDefinition {
 	indexResources := make([]IndexDefinition, len(t.Indexes))
@@ -223,5 +217,30 @@ func (t *TableResource) validatePartitionBy(diags diag.Diagnostics) {
 				Detail:   fmt.Sprintf("partition by field '%s' is not a column", partitionBy.By),
 			})
 		}
+	}
+}
+
+func (t *TableResource) SetColumns(columns []interface{}) {
+	for _, column := range columns {
+		columnDefinition := ColumnDefinition{
+			Name:              column.(map[string]interface{})["name"].(string),
+			Type:              column.(map[string]interface{})["type"].(string),
+			Comment:           column.(map[string]interface{})["comment"].(string),
+			DefaultKind:       column.(map[string]interface{})["default_kind"].(string),
+			DefaultExpression: column.(map[string]interface{})["default_expression"].(string),
+		}
+		t.Columns = append(t.Columns, columnDefinition)
+	}
+}
+
+func (t *TableResource) SetIndexes(indexes []interface{}) {
+	for _, index := range indexes {
+		indexDefinition := IndexDefinition{
+			Name:        index.(map[string]interface{})["name"].(string),
+			Expression:  index.(map[string]interface{})["expression"].(string),
+			Type:        index.(map[string]interface{})["type"].(string),
+			Granularity: uint64(index.(map[string]interface{})["granularity"].(int)),
+		}
+		t.Indexes = append(t.Indexes, indexDefinition)
 	}
 }

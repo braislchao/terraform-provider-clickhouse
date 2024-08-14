@@ -1,10 +1,12 @@
-package resourcerole
+package resources
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/models"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -42,8 +44,7 @@ func ResourceRole() *schema.Resource {
 func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
+	c := meta.(*sdk.Client)
 
 	planRoleName := d.Get("name").(string)
 	planDatabase := d.Get("database").(string)
@@ -55,8 +56,13 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	chRoleService := CHRoleService{CHConnection: conn}
-	chRole, err := chRoleService.UpdateRole(ctx, RoleResource{Name: planRoleName, Database: planDatabase, Privileges: planPrivileges}, d)
+	role := models.RoleResource{
+		Name:       planRoleName,
+		Database:   planDatabase,
+		Privileges: planPrivileges,
+	}
+
+	chRole, err := c.UpdateRole(ctx, role, d)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("resource role update: %v", err))
@@ -70,12 +76,10 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
-	chRoleService := CHRoleService{CHConnection: conn}
+	c := meta.(*sdk.Client)
 
 	roleNameState := d.Get("name").(string)
-	chRole, err := chRoleService.GetRole(ctx, roleNameState)
+	chRole, err := c.GetRole(ctx, roleNameState)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("resource role read: %v", err))
 	}
@@ -102,8 +106,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
+	c := meta.(*sdk.Client)
 
 	database := d.Get("database").(string)
 	roleName := d.Get("name").(string)
@@ -114,8 +117,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		return diags
 	}
 
-	chRoleService := CHRoleService{CHConnection: conn}
-	chRole, err := chRoleService.CreateRole(ctx, roleName, database, common.StringSetToList(privileges))
+	chRole, err := c.CreateRole(ctx, roleName, database, common.StringSetToList(privileges))
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("resource role create: %v", err))
@@ -128,13 +130,11 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*common.ApiClient)
-	conn := client.ClickhouseConnection
+	c := meta.(*sdk.Client)
 
 	roleName := d.Get("name").(string)
-	chRoleService := CHRoleService{CHConnection: conn}
 
-	if err := chRoleService.DeleteRole(ctx, roleName); err != nil {
+	if err := c.DeleteRole(ctx, roleName); err != nil {
 		return diag.FromErr(fmt.Errorf("resource role delete: %v", err))
 	}
 	return diags

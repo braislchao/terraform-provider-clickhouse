@@ -1,4 +1,4 @@
-package resourcerole_test
+package resources_test
 
 import (
 	"context"
@@ -8,14 +8,16 @@ import (
 	"testing"
 
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
-	resourcerole "github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/resources/role"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/models"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/resources"
+	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/testutils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-type TestStepData struct {
+type TestRoleStepData struct {
 	roleName   string
 	database   string
 	privileges []string
@@ -28,7 +30,7 @@ const roleName2 = "test_role_2"
 const databaseName1 = "role_role_db_1"
 const databaseName2 = "role_role_db_2"
 
-var test1StepsData = []TestStepData{
+var test1StepsData = []TestRoleStepData{
 	{
 		// Create role
 		roleName: roleName1,
@@ -75,19 +77,19 @@ var test1StepsData = []TestStepData{
 		// Check all allowed privileges
 		roleName:   roleName1,
 		database:   databaseName1,
-		privileges: resourcerole.AllowedDbLevelPrivileges,
+		privileges: resources.AllowedDbLevelPrivileges,
 	},
 	{
 		// Change role name
 		roleName:   roleName2,
 		database:   databaseName1,
-		privileges: resourcerole.AllowedDbLevelPrivileges,
+		privileges: resources.AllowedDbLevelPrivileges,
 	},
 	{
 		// Change role name and db
 		roleName:   roleName1,
 		database:   databaseName2,
-		privileges: resourcerole.AllowedDbLevelPrivileges,
+		privileges: resources.AllowedDbLevelPrivileges,
 	},
 	{
 		// Change role name, db and privileges
@@ -99,7 +101,7 @@ var test1StepsData = []TestStepData{
 	},
 }
 
-var test2StepsData = []TestStepData{
+var test2StepsData = []TestRoleStepData{
 	{
 		// Create role
 		roleName: roleName1,
@@ -129,17 +131,17 @@ var test2StepsData = []TestStepData{
 		// Check all allowed privileges
 		roleName:   roleName1,
 		database:   "system",
-		privileges: resourcerole.AllowedDbLevelPrivileges,
+		privileges: resources.AllowedDbLevelPrivileges,
 	},
 	{
 		// Change role name
 		roleName:   roleName2,
 		database:   "system",
-		privileges: resourcerole.AllowedDbLevelPrivileges,
+		privileges: resources.AllowedDbLevelPrivileges,
 	},
 }
 
-func generateTestSteps(testStepsData []TestStepData) []resource.TestStep {
+func generateRoleTestSteps(testStepsData []TestRoleStepData) []resource.TestStep {
 	var testSteps []resource.TestStep
 	for _, testStepData := range testStepsData {
 		var databaseRegex *regexp.Regexp
@@ -179,19 +181,19 @@ func TestAccResourceRole(t *testing.T) {
 		//ProviderFactories: testutils.GetProviderFactories(),
 		Providers:    testutils.Provider(),
 		CheckDestroy: testAccCheckRoleResourceDestroy([]string{roleName1, roleName2}),
-		Steps:        generateTestSteps(test1StepsData),
+		Steps:        generateRoleTestSteps(test1StepsData),
 	})
 	// Feature tests, system database
 	resource.Test(t, resource.TestCase{
 		Providers:    testutils.Provider(),
 		CheckDestroy: testAccCheckRoleResourceDestroy([]string{roleName1, roleName2}),
-		Steps:        generateTestSteps(test2StepsData),
+		Steps:        generateRoleTestSteps(test2StepsData),
 	})
 	// Feature tests, global privileges
 	resource.Test(t, resource.TestCase{
 		Providers:    testutils.Provider(),
 		CheckDestroy: testAccCheckRoleResourceDestroy([]string{roleName1, roleName2}),
-		Steps: generateTestSteps([]TestStepData{
+		Steps: generateRoleTestSteps([]TestRoleStepData{
 			{
 				// Create role
 				roleName: roleName1,
@@ -297,11 +299,9 @@ func testAccRoleResource(roleName string, database string, privileges []string) 
 
 func testAccCheckRoleResourceExists(roleName string, database string, privileges []string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		client := testutils.TestAccProvider.Meta().(*common.ApiClient)
-		conn := client.ClickhouseConnection
-		chRoleService := resourcerole.CHRoleService{CHConnection: conn}
+		c := testutils.TestAccProvider.Meta().(*sdk.Client)
 
-		dbRole, err := chRoleService.GetRole(context.Background(), roleName)
+		dbRole, err := c.GetRole(context.Background(), roleName)
 
 		if err != nil {
 			return fmt.Errorf("get role: %v", err)
@@ -315,7 +315,7 @@ func testAccCheckRoleResourceExists(roleName string, database string, privileges
 		}
 
 		for _, privilege := range privileges {
-			var matchedDbRolePrivilege *resourcerole.CHGrant
+			var matchedDbRolePrivilege *models.CHGrant
 			for _, dbRolePrivilege := range dbRole.Privileges {
 				if privilege == dbRolePrivilege.AccessType {
 					matchedDbRolePrivilege = &dbRolePrivilege
@@ -337,11 +337,9 @@ func testAccCheckRoleResourceExists(roleName string, database string, privileges
 func testAccCheckRoleResourceDestroy(roleNames []string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		for _, roleName := range roleNames {
-			client := testutils.TestAccProvider.Meta().(*common.ApiClient)
-			conn := client.ClickhouseConnection
-			chRoleService := resourcerole.CHRoleService{CHConnection: conn}
+			c := testutils.TestAccProvider.Meta().(*sdk.Client)
 
-			dbRole, err := chRoleService.GetRole(context.Background(), roleName)
+			dbRole, err := c.GetRole(context.Background(), roleName)
 
 			if err != nil {
 				return fmt.Errorf("get role: %v", err)

@@ -1,7 +1,6 @@
 package common
 
 import (
-	"context"
 	"os"
 
 	"fmt"
@@ -40,19 +39,6 @@ func StringListToSet(list []string) *schema.Set {
 		set = append(set, item)
 	}
 	return schema.NewSet(schema.HashString, set)
-}
-
-func FormatQuery(ctx context.Context, query string, meta any) string {
-	client := meta.(*ApiClient)
-	conn := client.ClickhouseConnection
-	formatQueryStmt := `SELECT formatQuery($1)`
-	row := (*conn).QueryRow(ctx, formatQueryStmt, query)
-
-	var formattedQueryResult string
-	if err := row.Scan(&formattedQueryResult); err != nil {
-		return ""
-	}
-	return formattedQueryResult
 }
 
 // NormalizeQuery converts a regular query to lowercase, and strips new lines.

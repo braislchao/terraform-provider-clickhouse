@@ -1,16 +1,6 @@
-package resourceview
+package models
 
-import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-)
-
-type CHView struct {
-	Database string `ch:"database"`
-	Name     string `ch:"name"`
-	Query    string `ch:"as_select"`
-	Engine   string `ch:"engine"`
-	Comment  string `ch:"comment"`
-}
+import "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 type ViewResource struct {
 	Database     string
@@ -20,6 +10,14 @@ type ViewResource struct {
 	Materialized bool
 	ToTable      string
 	Comment      string
+}
+
+type CHView struct {
+	Database string `ch:"database"`
+	Name     string `ch:"name"`
+	Query    string `ch:"as_select"`
+	Engine   string `ch:"engine"`
+	Comment  string `ch:"comment"`
 }
 
 func (t *CHView) ToResource() (*ViewResource, error) {
