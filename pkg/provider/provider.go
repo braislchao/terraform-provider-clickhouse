@@ -129,6 +129,6 @@ func configure() func(context.Context, *schema.ResourceData) (any, diag.Diagnost
 			return nil, diag.FromErr(fmt.Errorf("ping clickhouse database: %w", err))
 		}
 
-		return &sdk.Client{Connection: &conn}, diags
+		return &sdk.Client{Connection: conn}, diags
 	}
 }

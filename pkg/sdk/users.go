@@ -13,7 +13,7 @@ import (
 func (client *Client) GetUser(ctx context.Context, userName string) (*models.CHUser, error) {
 	roleQuery := fmt.Sprintf("SELECT name, default_roles_list FROM system.users WHERE name = '%s'", userName)
 
-	rows, err := (*client.Connection).Query(ctx, roleQuery)
+	rows, err := client.Connection.Query(ctx, roleQuery)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching user: %s", err)
 	}
@@ -44,7 +44,7 @@ func (client *Client) CreateUser(ctx context.Context, userPlan models.UserResour
 	if len(rolesList) > 0 {
 		query = fmt.Sprintf("%s DEFAULT ROLE %s", query, strings.Join(rolesList, ","))
 	}
-	err := (*client.Connection).Exec(ctx, query)
+	err := client.Connection.Exec(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("error creating user: %s", err)
 	}
@@ -52,7 +52,7 @@ func (client *Client) CreateUser(ctx context.Context, userPlan models.UserResour
 }
 
 func (client *Client) UpdateUser(ctx context.Context, userPlan models.UserResource, resourceData *schema.ResourceData) (*models.CHUser, error) {
-	conn := *client.Connection
+	conn := client.Connection
 	stateUserName, _ := resourceData.GetChange("name")
 	user, err := client.GetUser(ctx, stateUserName.(string))
 	if err != nil {
@@ -130,5 +130,5 @@ func (client *Client) UpdateUser(ctx context.Context, userPlan models.UserResour
 }
 
 func (client *Client) DeleteUser(ctx context.Context, name string) error {
-	return (*client.Connection).Exec(ctx, fmt.Sprintf("DROP USER %s", name))
+	return client.Connection.Exec(ctx, fmt.Sprintf("DROP USER %s", name))
 }

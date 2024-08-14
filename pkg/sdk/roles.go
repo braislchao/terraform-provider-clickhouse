@@ -18,7 +18,7 @@ func getGrantQuery(roleName string, privileges []string, database string) string
 
 func (client *Client) getRoleGrants(ctx context.Context, roleName string) ([]models.CHGrant, error) {
 	query := fmt.Sprintf("SELECT role_name, access_type, database FROM system.grants WHERE role_name = '%s'", roleName)
-	rows, err := (*client.Connection).Query(ctx, query)
+	rows, err := client.Connection.Query(ctx, query)
 
 	if err != nil {
 		return nil, fmt.Errorf("error fetching role grants: %s", err)
@@ -43,7 +43,7 @@ func (client *Client) getRoleGrants(ctx context.Context, roleName string) ([]mod
 func (client *Client) GetRole(ctx context.Context, roleName string) (*models.CHRole, error) {
 	roleQuery := fmt.Sprintf("SELECT name FROM system.roles WHERE name = '%s'", roleName)
 
-	rows, err := (*client.Connection).Query(ctx, roleQuery)
+	rows, err := client.Connection.Query(ctx, roleQuery)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching role: %s", err)
 	}
@@ -99,7 +99,7 @@ func (client *Client) UpdateRole(ctx context.Context, rolePlan models.RoleResour
 		}
 	}
 
-	conn := *client.Connection
+	conn := client.Connection
 
 	if roleNameHasChange {
 		err := conn.Exec(ctx, fmt.Sprintf("ALTER ROLE %s RENAME TO %s", chRole.Name, rolePlan.Name))
@@ -142,7 +142,7 @@ func (client *Client) UpdateRole(ctx context.Context, rolePlan models.RoleResour
 }
 
 func (client *Client) CreateRole(ctx context.Context, name string, database string, privileges []string) (*models.CHRole, error) {
-	conn := *client.Connection
+	conn := client.Connection
 	err := conn.Exec(ctx, fmt.Sprintf("CREATE ROLE %s", name))
 	if err != nil {
 		return nil, fmt.Errorf("error creating role: %s", err)
@@ -166,5 +166,5 @@ func (client *Client) CreateRole(ctx context.Context, name string, database stri
 }
 
 func (client *Client) DeleteRole(ctx context.Context, name string) error {
-	return (*client.Connection).Exec(ctx, fmt.Sprintf("DROP ROLE %s", name))
+	return client.Connection.Exec(ctx, fmt.Sprintf("DROP ROLE %s", name))
 }

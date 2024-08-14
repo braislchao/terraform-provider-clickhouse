@@ -13,7 +13,7 @@ import (
 
 func (client *Client) GetDBTables(ctx context.Context, database string) ([]models.CHTable, error) {
 	query := fmt.Sprintf("SELECT database, name FROM system.tables where database = '%s'", database)
-	rows, err := (*client.Connection).Query(ctx, query)
+	rows, err := client.Connection.Query(ctx, query)
 
 	if err != nil {
 		return nil, fmt.Errorf("reading tables from Clickhouse: %v", err)
@@ -84,7 +84,7 @@ func (client *Client) UpdateTable(ctx context.Context, table models.TableResourc
 }
 
 func executeQuery(ctx context.Context, client *Client, query string) error {
-	err := (*client.Connection).Exec(ctx, query)
+	err := client.Connection.Exec(ctx, query)
 	if err != nil {
 		return fmt.Errorf("executing query: %v", err)
 	}
@@ -192,7 +192,7 @@ func dropOldColumns(ctx context.Context, client *Client, table models.TableResou
 
 func (client *Client) GetTable(ctx context.Context, database string, table string) (*models.CHTable, error) {
 	query := fmt.Sprintf("SELECT database, name, engine_full, engine, comment FROM system.tables where database = '%s' and name = '%s'", database, table)
-	row := (*client.Connection).QueryRow(ctx, query)
+	row := client.Connection.QueryRow(ctx, query)
 
 	if row.Err() != nil {
 		return nil, fmt.Errorf("reading table from Clickhouse: %v", row.Err())
@@ -226,7 +226,7 @@ func (client *Client) getTableIndexes(ctx context.Context, database string, tabl
 		database,
 		table,
 	)
-	rows, err := (*client.Connection).Query(ctx, query)
+	rows, err := client.Connection.Query(ctx, query)
 
 	if err != nil {
 		return nil, fmt.Errorf("reading indexes from Clickhouse: %v", err)
@@ -250,7 +250,7 @@ func (client *Client) getTableColumns(ctx context.Context, database string, tabl
 		database,
 		table,
 	)
-	rows, err := (*client.Connection).Query(ctx, query)
+	rows, err := client.Connection.Query(ctx, query)
 
 	if err != nil {
 		return nil, fmt.Errorf("reading columns from Clickhouse: %v", err)

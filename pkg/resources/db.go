@@ -70,11 +70,10 @@ func ResourceDb() *schema.Resource {
 func resourceDbRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*sdk.Client)
 	var diags diag.Diagnostics
-	conn := *client.Connection
 	cluster := d.Get("cluster").(string)
 
 	database_name := d.Get("name").(string)
-	row := conn.QueryRow(ctx, fmt.Sprintf("SELECT name, engine, data_path, metadata_path, uuid, comment FROM system.databases where name = '%v'", database_name))
+	row := client.Connection.QueryRow(ctx, fmt.Sprintf("SELECT name, engine, data_path, metadata_path, uuid, comment FROM system.databases where name = '%v'", database_name))
 
 	if row.Err() != nil {
 		return diag.FromErr(fmt.Errorf("reading database from Clickhouse: %v", row.Err()))
@@ -157,7 +156,6 @@ func resourceDbRead(ctx context.Context, d *schema.ResourceData, meta any) diag.
 func resourceDbCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*sdk.Client)
 	var diags diag.Diagnostics
-	conn := *client.Connection
 
 	cluster, _ := d.Get("cluster").(string)
 	clusterStatement := common.GetClusterStatement(cluster)
@@ -166,7 +164,7 @@ func resourceDbCreate(ctx context.Context, d *schema.ResourceData, meta any) dia
 	createStatement := common.GetCreateStatement("database")
 
 	query := fmt.Sprintf("%s %v %v COMMENT '%v'", createStatement, databaseName, clusterStatement, comment)
-	err := conn.Exec(ctx, query)
+	err := client.Connection.Exec(ctx, query)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -180,7 +178,6 @@ func resourceDbDelete(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	client := meta.(*sdk.Client)
 	var diags diag.Diagnostics
-	conn := client.Connection
 
 	databaseName := d.Get("name").(string)
 
@@ -216,7 +213,7 @@ func resourceDbDelete(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	query := fmt.Sprintf("DROP DATABASE %v %v SYNC", databaseName, clusterStatement)
 
-	err = (*conn).Exec(ctx, query)
+	err = client.Connection.Exec(ctx, query)
 	if err != nil {
 		return diag.FromErr(err)
 	}
