@@ -84,14 +84,6 @@ func (client *Client) UpdateTable(ctx context.Context, table models.TableResourc
 }
 
 func executeQuery(ctx context.Context, client *Client, query string) error {
-	if common.DebugEnabled {
-		formattedQuery, err := client.FormatQuery(ctx, query)
-		if err != nil {
-			return err
-		}
-		tflog.Debug(ctx, "executing query: \n\n"+formattedQuery+"\n\n")
-	}
-
 	err := (*client.Connection).Exec(ctx, query)
 	if err != nil {
 		return fmt.Errorf("executing query: %v", err)
