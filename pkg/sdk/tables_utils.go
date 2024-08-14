@@ -126,32 +126,3 @@ func buildCreateTableOnClusterSentence(resource models.TableResource) (query str
 	)
 	return ret
 }
-
-func GetIndexes(indexes []models.IndexDefinition) []map[string]interface{} {
-	var ret []map[string]interface{}
-
-	for _, index := range indexes {
-		ret = append(ret, map[string]interface{}{
-			"name":        index.Name,
-			"expression":  index.Expression,
-			"type":        index.Type,
-			"granularity": index.Granularity,
-		})
-	}
-	return ret
-}
-
-func GetColumns(columns []models.ColumnDefinition) []map[string]interface{} {
-	var ret []map[string]interface{}
-
-	for _, column := range columns {
-		ret = append(ret, map[string]interface{}{
-			"name":               column.Name,
-			"type":               column.Type,
-			"comment":            column.Comment,
-			"default_kind":       column.DefaultKind,
-			"default_expression": column.DefaultExpression,
-		})
-	}
-	return ret
-}

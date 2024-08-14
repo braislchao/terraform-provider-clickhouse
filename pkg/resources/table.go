@@ -258,11 +258,11 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		}
 	}
 	// not set - partition_by
-	if err := d.Set("column", sdk.GetColumns(tableResource.Columns)); err != nil {
+	if err := d.Set("column", c.GetColumnDefintions(tableResource.Columns)); err != nil {
 		return diag.FromErr(fmt.Errorf("setting column: %v", err))
 	}
 	if tableResource.Indexes != nil {
-		if err := d.Set("index", sdk.GetIndexes(tableResource.Indexes)); err != nil {
+		if err := d.Set("index", c.GetIndexDefintions(tableResource.Indexes)); err != nil {
 			return diag.FromErr(fmt.Errorf("setting indexes: %v", err))
 		}
 	}
