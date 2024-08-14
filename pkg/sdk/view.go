@@ -9,9 +9,9 @@ import (
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/models"
 )
 
-func (client *Client) GetView(ctx context.Context, database string, view string) (*models.CHView, error) {
+func (c *Client) GetView(ctx context.Context, database string, view string) (*models.CHView, error) {
 	query := fmt.Sprintf("SELECT database, name, engine, as_select, comment FROM system.tables where database = '%s' and name = '%s'", database, view)
-	row := client.Connection.QueryRow(ctx, query)
+	row := c.Conn.QueryRow(ctx, query)
 
 	if row.Err() != nil {
 		return nil, fmt.Errorf("reading view from Clickhouse: %v", row.Err())
@@ -32,18 +32,18 @@ func (client *Client) GetView(ctx context.Context, database string, view string)
 	return &chView, nil
 }
 
-func (client *Client) CreateView(ctx context.Context, resource models.ViewResource) error {
+func (c *Client) CreateView(ctx context.Context, resource models.ViewResource) error {
 	query := buildCreateOnClusterSentence(resource)
-	err := client.Connection.Exec(ctx, query)
+	err := c.Conn.Exec(ctx, query)
 	if err != nil {
 		return fmt.Errorf("creating Clickhouse view: %v", err)
 	}
 	return nil
 }
 
-func (client *Client) DeleteView(ctx context.Context, resource models.ViewResource) error {
+func (c *Client) DeleteView(ctx context.Context, resource models.ViewResource) error {
 	query := fmt.Sprintf("DROP VIEW if exists %s.%s %s", resource.Database, resource.Name, common.GetClusterStatement(resource.Cluster))
-	err := client.Connection.Exec(ctx, query)
+	err := c.Conn.Exec(ctx, query)
 	if err != nil {
 		return fmt.Errorf("deleting Clickhouse view: %v", err)
 	}

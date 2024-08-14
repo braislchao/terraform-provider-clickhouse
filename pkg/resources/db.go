@@ -68,12 +68,12 @@ func ResourceDb() *schema.Resource {
 }
 
 func resourceDbRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 	var diags diag.Diagnostics
 	cluster := d.Get("cluster").(string)
 
 	database_name := d.Get("name").(string)
-	row := client.Connection.QueryRow(ctx, fmt.Sprintf("SELECT name, engine, data_path, metadata_path, uuid, comment FROM system.databases where name = '%v'", database_name))
+	row := c.Conn.QueryRow(ctx, fmt.Sprintf("SELECT name, engine, data_path, metadata_path, uuid, comment FROM system.databases where name = '%v'", database_name))
 
 	if row.Err() != nil {
 		return diag.FromErr(fmt.Errorf("reading database from Clickhouse: %v", row.Err()))
@@ -154,7 +154,7 @@ func resourceDbRead(ctx context.Context, d *schema.ResourceData, meta any) diag.
 }
 
 func resourceDbCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 	var diags diag.Diagnostics
 
 	cluster, _ := d.Get("cluster").(string)
@@ -164,7 +164,7 @@ func resourceDbCreate(ctx context.Context, d *schema.ResourceData, meta any) dia
 	createStatement := common.GetCreateStatement("database")
 
 	query := fmt.Sprintf("%s %v %v COMMENT '%v'", createStatement, databaseName, clusterStatement, comment)
-	err := client.Connection.Exec(ctx, query)
+	err := c.Conn.Exec(ctx, query)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -175,8 +175,7 @@ func resourceDbCreate(ctx context.Context, d *schema.ResourceData, meta any) dia
 }
 
 func resourceDbDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 	var diags diag.Diagnostics
 
 	databaseName := d.Get("name").(string)
@@ -190,7 +189,7 @@ func resourceDbDelete(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return diags
 	}
 
-	tables, err := client.GetDBTables(ctx, databaseName)
+	tables, err := c.GetDBTables(ctx, databaseName)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("resource db delete: %v", err))
@@ -213,7 +212,7 @@ func resourceDbDelete(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	query := fmt.Sprintf("DROP DATABASE %v %v SYNC", databaseName, clusterStatement)
 
-	err = client.Connection.Exec(ctx, query)
+	err = c.Conn.Exec(ctx, query)
 	if err != nil {
 		return diag.FromErr(err)
 	}

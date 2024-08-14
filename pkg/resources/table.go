@@ -204,11 +204,11 @@ func ResourceTable() *schema.Resource {
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 	database := d.Get("database").(string)
 	tableName := d.Get("name").(string)
 
-	chTable, err := client.GetTable(ctx, database, tableName)
+	chTable, err := c.GetTable(ctx, database, tableName)
 	if chTable == nil && err == nil {
 		d.SetId("")
 		return nil
@@ -276,7 +276,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 	tableResource := models.TableResource{}
 
 	tableResource.Cluster = d.Get("cluster").(string)
@@ -298,7 +298,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		return diags
 	}
 
-	err := client.CreateTable(ctx, tableResource)
+	err := c.CreateTable(ctx, tableResource)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -311,14 +311,14 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 
 	var tableResource models.TableResource
 	tableResource.Database = d.Get("database").(string)
 	tableResource.Name = d.Get("name").(string)
 	tableResource.Cluster = d.Get("cluster").(string)
 
-	err := client.DeleteTable(ctx, tableResource)
+	err := c.DeleteTable(ctx, tableResource)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -328,7 +328,7 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 
 	tableResource := models.TableResource{}
 
@@ -338,7 +338,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	tableResource.SetColumns(d.Get("column").([]interface{}))
 	tableResource.Comment = d.Get("comment").(string)
 
-	err := client.UpdateTable(ctx, tableResource, d)
+	err := c.UpdateTable(ctx, tableResource, d)
 	if err != nil {
 		return diag.FromErr(err)
 	}

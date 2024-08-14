@@ -5,5 +5,5 @@ import (
 )
 
 type Client struct {
-	Connection driver.Conn
+	Conn driver.Conn
 }

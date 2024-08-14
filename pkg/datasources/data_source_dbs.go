@@ -60,10 +60,10 @@ func DataSourceDbs() *schema.Resource {
 }
 
 func dataSourceDbsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 	var diags diag.Diagnostics
 
-	rows, err := client.Connection.Query(ctx, "SELECT name, engine, data_path, metadata_path, uuid, comment FROM system.databases")
+	rows, err := c.Conn.Query(ctx, "SELECT name, engine, data_path, metadata_path, uuid, comment FROM system.databases")
 	if err != nil {
 		return diag.FromErr(err)
 	}

@@ -79,11 +79,11 @@ func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	var diags diag.Diagnostics
 
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 	database := d.Get("database").(string)
 	viewName := d.Get("name").(string)
 
-	chView, err := client.GetView(ctx, database, viewName)
+	chView, err := c.GetView(ctx, database, viewName)
 
 	if chView == nil && err == nil {
 		d.SetId("")
@@ -129,7 +129,7 @@ func resourceViewRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 }
 
 func resourceViewCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 	viewResource := models.ViewResource{}
 
 	viewResource.Cluster = d.Get("cluster").(string)
@@ -145,7 +145,7 @@ func resourceViewCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		return diags
 	}
 
-	err := client.CreateView(ctx, viewResource)
+	err := c.CreateView(ctx, viewResource)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -158,14 +158,14 @@ func resourceViewCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 func resourceViewDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 
 	var viewResource models.ViewResource
 	viewResource.Database = d.Get("database").(string)
 	viewResource.Name = d.Get("name").(string)
 	viewResource.Cluster = d.Get("cluster").(string)
 
-	err := client.DeleteView(ctx, viewResource)
+	err := c.DeleteView(ctx, viewResource)
 
 	if err != nil {
 		return diag.FromErr(err)

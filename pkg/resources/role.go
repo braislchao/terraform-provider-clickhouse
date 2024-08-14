@@ -44,7 +44,7 @@ func ResourceRole() *schema.Resource {
 func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 
 	planRoleName := d.Get("name").(string)
 	planDatabase := d.Get("database").(string)
@@ -62,7 +62,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		Privileges: planPrivileges,
 	}
 
-	chRole, err := client.UpdateRole(ctx, role, d)
+	chRole, err := c.UpdateRole(ctx, role, d)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("resource role update: %v", err))
@@ -76,10 +76,10 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 
 	roleNameState := d.Get("name").(string)
-	chRole, err := client.GetRole(ctx, roleNameState)
+	chRole, err := c.GetRole(ctx, roleNameState)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("resource role read: %v", err))
 	}
@@ -106,7 +106,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 
 	database := d.Get("database").(string)
 	roleName := d.Get("name").(string)
@@ -117,7 +117,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		return diags
 	}
 
-	chRole, err := client.CreateRole(ctx, roleName, database, common.StringSetToList(privileges))
+	chRole, err := c.CreateRole(ctx, roleName, database, common.StringSetToList(privileges))
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("resource role create: %v", err))
@@ -130,11 +130,11 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 
 	roleName := d.Get("name").(string)
 
-	if err := client.DeleteRole(ctx, roleName); err != nil {
+	if err := c.DeleteRole(ctx, roleName); err != nil {
 		return diag.FromErr(fmt.Errorf("resource role delete: %v", err))
 	}
 	return diags

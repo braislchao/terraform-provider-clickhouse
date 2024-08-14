@@ -16,9 +16,9 @@ func getGrantQuery(roleName string, privileges []string, database string) string
 	return fmt.Sprintf("GRANT %s ON %s.* TO %s", strings.Join(privileges, ","), database, roleName)
 }
 
-func (client *Client) getRoleGrants(ctx context.Context, roleName string) ([]models.CHGrant, error) {
+func (c *Client) getRoleGrants(ctx context.Context, roleName string) ([]models.CHGrant, error) {
 	query := fmt.Sprintf("SELECT role_name, access_type, database FROM system.grants WHERE role_name = '%s'", roleName)
-	rows, err := client.Connection.Query(ctx, query)
+	rows, err := c.Conn.Query(ctx, query)
 
 	if err != nil {
 		return nil, fmt.Errorf("error fetching role grants: %s", err)
@@ -40,10 +40,10 @@ func (client *Client) getRoleGrants(ctx context.Context, roleName string) ([]mod
 	return privileges, nil
 }
 
-func (client *Client) GetRole(ctx context.Context, roleName string) (*models.CHRole, error) {
+func (c *Client) GetRole(ctx context.Context, roleName string) (*models.CHRole, error) {
 	roleQuery := fmt.Sprintf("SELECT name FROM system.roles WHERE name = '%s'", roleName)
 
-	rows, err := client.Connection.Query(ctx, roleQuery)
+	rows, err := c.Conn.Query(ctx, roleQuery)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching role: %s", err)
 	}
@@ -51,7 +51,7 @@ func (client *Client) GetRole(ctx context.Context, roleName string) (*models.CHR
 		return nil, nil
 	}
 
-	privileges, err := client.getRoleGrants(ctx, roleName)
+	privileges, err := c.getRoleGrants(ctx, roleName)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching role grants: %s", err)
 	}
@@ -62,9 +62,9 @@ func (client *Client) GetRole(ctx context.Context, roleName string) (*models.CHR
 	}, nil
 }
 
-func (client *Client) UpdateRole(ctx context.Context, rolePlan models.RoleResource, resourceData *schema.ResourceData) (*models.CHRole, error) {
+func (c *Client) UpdateRole(ctx context.Context, rolePlan models.RoleResource, resourceData *schema.ResourceData) (*models.CHRole, error) {
 	stateRoleName, _ := resourceData.GetChange("name")
-	chRole, err := client.GetRole(ctx, stateRoleName.(string))
+	chRole, err := c.GetRole(ctx, stateRoleName.(string))
 
 	if err != nil {
 		return nil, fmt.Errorf("error fetching role: %s", err)
@@ -99,22 +99,20 @@ func (client *Client) UpdateRole(ctx context.Context, rolePlan models.RoleResour
 		}
 	}
 
-	conn := client.Connection
-
 	if roleNameHasChange {
-		err := conn.Exec(ctx, fmt.Sprintf("ALTER ROLE %s RENAME TO %s", chRole.Name, rolePlan.Name))
+		err := c.Conn.Exec(ctx, fmt.Sprintf("ALTER ROLE %s RENAME TO %s", chRole.Name, rolePlan.Name))
 		if err != nil {
 			return nil, fmt.Errorf("error renaming role %s to %s: %v", chRole.Name, rolePlan.Name, err)
 		}
 	}
 
 	if roleDatabaseHasChange {
-		err := conn.Exec(ctx, fmt.Sprintf("REVOKE ALL ON *.* FROM %s", rolePlan.Name))
+		err := c.Conn.Exec(ctx, fmt.Sprintf("REVOKE ALL ON *.* FROM %s", rolePlan.Name))
 		if err != nil {
 			return nil, fmt.Errorf("error revoking all privileges from role %s: %v", chRole.Name, err)
 		}
 		dbPrivileges := chRole.GetPrivilegesList()
-		err = conn.Exec(ctx, getGrantQuery(
+		err = c.Conn.Exec(ctx, getGrantQuery(
 			rolePlan.Name,
 			dbPrivileges,
 			rolePlan.Database,
@@ -125,25 +123,24 @@ func (client *Client) UpdateRole(ctx context.Context, rolePlan models.RoleResour
 	}
 
 	if len(grantPrivileges) > 0 {
-		err := conn.Exec(ctx, getGrantQuery(rolePlan.Name, grantPrivileges, rolePlan.Database))
+		err := c.Conn.Exec(ctx, getGrantQuery(rolePlan.Name, grantPrivileges, rolePlan.Database))
 		if err != nil {
 			return nil, fmt.Errorf("error granting privileges to role %s: %v", chRole.Name, err)
 		}
 	}
 
 	if len(revokePrivileges) > 0 {
-		err := conn.Exec(ctx, fmt.Sprintf("REVOKE %s ON %s.* FROM %s", strings.Join(revokePrivileges, ","), rolePlan.Database, rolePlan.Name))
+		err := c.Conn.Exec(ctx, fmt.Sprintf("REVOKE %s ON %s.* FROM %s", strings.Join(revokePrivileges, ","), rolePlan.Database, rolePlan.Name))
 		if err != nil {
 			return nil, fmt.Errorf("error revoking privileges from role %s: %v", chRole.Name, err)
 		}
 	}
 
-	return client.GetRole(ctx, rolePlan.Name)
+	return c.GetRole(ctx, rolePlan.Name)
 }
 
-func (client *Client) CreateRole(ctx context.Context, name string, database string, privileges []string) (*models.CHRole, error) {
-	conn := client.Connection
-	err := conn.Exec(ctx, fmt.Sprintf("CREATE ROLE %s", name))
+func (c *Client) CreateRole(ctx context.Context, name string, database string, privileges []string) (*models.CHRole, error) {
+	err := c.Conn.Exec(ctx, fmt.Sprintf("CREATE ROLE %s", name))
 	if err != nil {
 		return nil, fmt.Errorf("error creating role: %s", err)
 	}
@@ -151,10 +148,10 @@ func (client *Client) CreateRole(ctx context.Context, name string, database stri
 	var chPrivileges []models.CHGrant
 
 	for _, privilege := range privileges {
-		err = conn.Exec(ctx, getGrantQuery(name, []string{privilege}, database))
+		err = c.Conn.Exec(ctx, getGrantQuery(name, []string{privilege}, database))
 		if err != nil {
 			// Rollback
-			err2 := conn.Exec(ctx, fmt.Sprintf("DROP ROLE %s", name))
+			err2 := c.Conn.Exec(ctx, fmt.Sprintf("DROP ROLE %s", name))
 			if err2 != nil {
 				return nil, fmt.Errorf("error creating role: %s:%s", err, err2)
 			}
@@ -165,6 +162,6 @@ func (client *Client) CreateRole(ctx context.Context, name string, database stri
 	return &models.CHRole{Name: name, Privileges: chPrivileges}, nil
 }
 
-func (client *Client) DeleteRole(ctx context.Context, name string) error {
-	return client.Connection.Exec(ctx, fmt.Sprintf("DROP ROLE %s", name))
+func (c *Client) DeleteRole(ctx context.Context, name string) error {
+	return c.Conn.Exec(ctx, fmt.Sprintf("DROP ROLE %s", name))
 }

@@ -299,9 +299,9 @@ func testAccRoleResource(roleName string, database string, privileges []string) 
 
 func testAccCheckRoleResourceExists(roleName string, database string, privileges []string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		client := testutils.TestAccProvider.Meta().(*sdk.Client)
+		c := testutils.TestAccProvider.Meta().(*sdk.Client)
 
-		dbRole, err := client.GetRole(context.Background(), roleName)
+		dbRole, err := c.GetRole(context.Background(), roleName)
 
 		if err != nil {
 			return fmt.Errorf("get role: %v", err)
@@ -337,9 +337,9 @@ func testAccCheckRoleResourceExists(roleName string, database string, privileges
 func testAccCheckRoleResourceDestroy(roleNames []string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		for _, roleName := range roleNames {
-			client := testutils.TestAccProvider.Meta().(*sdk.Client)
+			c := testutils.TestAccProvider.Meta().(*sdk.Client)
 
-			dbRole, err := client.GetRole(context.Background(), roleName)
+			dbRole, err := c.GetRole(context.Background(), roleName)
 
 			if err != nil {
 				return fmt.Errorf("get role: %v", err)

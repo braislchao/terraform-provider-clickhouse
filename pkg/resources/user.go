@@ -43,10 +43,10 @@ func ResourceUser() *schema.Resource {
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 
 	userName := d.Get("name").(string)
-	user, err := client.GetUser(ctx, userName)
+	user, err := c.GetUser(ctx, userName)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("resource user read: %v", err))
 	}
@@ -65,7 +65,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 
 	userName := d.Get("name").(string)
 	password := d.Get("password").(string)
@@ -75,7 +75,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		Password: password,
 		Roles:    rolesSet,
 	}
-	chUser, err := client.CreateUser(ctx, user)
+	chUser, err := c.CreateUser(ctx, user)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("resource user create: %v", err))
 	}
@@ -88,7 +88,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 
 	planUserName := d.Get("name").(string)
 	planPassword := d.Get("password").(string)
@@ -101,7 +101,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		Roles:    planRoles,
 	}
 
-	chUser, err := client.UpdateUser(ctx, user, d)
+	chUser, err := c.UpdateUser(ctx, user, d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -114,11 +114,11 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	client := meta.(*sdk.Client)
+	c := meta.(*sdk.Client)
 
 	userName := d.Get("name").(string)
 
-	err := client.DeleteUser(ctx, userName)
+	err := c.DeleteUser(ctx, userName)
 
 	if err != nil {
 		return diag.FromErr(err)

@@ -10,10 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func (client *Client) GetUser(ctx context.Context, userName string) (*models.CHUser, error) {
+func (c *Client) GetUser(ctx context.Context, userName string) (*models.CHUser, error) {
 	roleQuery := fmt.Sprintf("SELECT name, default_roles_list FROM system.users WHERE name = '%s'", userName)
 
-	rows, err := client.Connection.Query(ctx, roleQuery)
+	rows, err := c.Conn.Query(ctx, roleQuery)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching user: %s", err)
 	}
@@ -29,7 +29,7 @@ func (client *Client) GetUser(ctx context.Context, userName string) (*models.CHU
 	return &chUser, nil
 }
 
-func (client *Client) CreateUser(ctx context.Context, userPlan models.UserResource) (*models.CHUser, error) {
+func (c *Client) CreateUser(ctx context.Context, userPlan models.UserResource) (*models.CHUser, error) {
 	var rolesList []string
 
 	for _, role := range userPlan.Roles.List() {
@@ -44,17 +44,16 @@ func (client *Client) CreateUser(ctx context.Context, userPlan models.UserResour
 	if len(rolesList) > 0 {
 		query = fmt.Sprintf("%s DEFAULT ROLE %s", query, strings.Join(rolesList, ","))
 	}
-	err := client.Connection.Exec(ctx, query)
+	err := c.Conn.Exec(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("error creating user: %s", err)
 	}
-	return client.GetUser(ctx, userPlan.Name)
+	return c.GetUser(ctx, userPlan.Name)
 }
 
-func (client *Client) UpdateUser(ctx context.Context, userPlan models.UserResource, resourceData *schema.ResourceData) (*models.CHUser, error) {
-	conn := client.Connection
+func (c *Client) UpdateUser(ctx context.Context, userPlan models.UserResource, resourceData *schema.ResourceData) (*models.CHUser, error) {
 	stateUserName, _ := resourceData.GetChange("name")
-	user, err := client.GetUser(ctx, stateUserName.(string))
+	user, err := c.GetUser(ctx, stateUserName.(string))
 	if err != nil {
 		return nil, fmt.Errorf("error fetching user: %s", err)
 	}
@@ -89,14 +88,14 @@ func (client *Client) UpdateUser(ctx context.Context, userPlan models.UserResour
 	}
 
 	if len(grantRoles) > 0 {
-		err := conn.Exec(ctx, fmt.Sprintf("GRANT %s TO %s", strings.Join(grantRoles, ","), stateUserName))
+		err := c.Conn.Exec(ctx, fmt.Sprintf("GRANT %s TO %s", strings.Join(grantRoles, ","), stateUserName))
 		if err != nil {
 			return nil, fmt.Errorf("error granting roles to user: %s", err)
 		}
 	}
 
 	if len(revokeRoles) > 0 {
-		err := conn.Exec(ctx, fmt.Sprintf("REVOKE %s FROM %s", strings.Join(revokeRoles, ","), stateUserName))
+		err := c.Conn.Exec(ctx, fmt.Sprintf("REVOKE %s FROM %s", strings.Join(revokeRoles, ","), stateUserName))
 		if err != nil {
 			return nil, fmt.Errorf("error revoking roles from user: %s", err)
 		}
@@ -121,14 +120,14 @@ func (client *Client) UpdateUser(ctx context.Context, userPlan models.UserResour
 		changePasswordClause,
 		strings.Join(common.StringSetToList(userPlan.Roles), ","),
 	)
-	err = conn.Exec(ctx, query)
+	err = c.Conn.Exec(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("error updating user: %s", err)
 	}
 
-	return client.GetUser(ctx, userPlan.Name)
+	return c.GetUser(ctx, userPlan.Name)
 }
 
-func (client *Client) DeleteUser(ctx context.Context, name string) error {
-	return client.Connection.Exec(ctx, fmt.Sprintf("DROP USER %s", name))
+func (c *Client) DeleteUser(ctx context.Context, name string) error {
+	return c.Conn.Exec(ctx, fmt.Sprintf("DROP USER %s", name))
 }
