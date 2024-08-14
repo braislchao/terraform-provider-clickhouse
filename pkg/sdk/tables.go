@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"strings"
 
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/common"
 	"github.com/FlowdeskMarkets/terraform-provider-clickhouse/pkg/models"
@@ -66,12 +65,14 @@ func (client *Client) UpdateTable(ctx context.Context, table models.TableResourc
 			columnMap := copyToMap(column)
 			columnMap["location"] = location
 
+			columnName := columnMap["name"].(string)
+
 			err := handleColumnChanges(ctx, client, table, clusterStatement, columnMap, oldColumnsMap)
 			if err != nil {
 				return err
 			}
 
-			location = "AFTER " + columnMap["name"].(string)
+			location = "AFTER " + columnName
 		}
 
 		err := dropOldColumns(ctx, client, table, clusterStatement, oldColumns, newColumnsMap)
@@ -84,31 +85,18 @@ func (client *Client) UpdateTable(ctx context.Context, table models.TableResourc
 
 func executeQuery(ctx context.Context, client *Client, query string) error {
 	if common.DebugEnabled {
-		formattedQuery, err := formatQuery(ctx, client, query)
+		formattedQuery, err := client.FormatQuery(ctx, query)
 		if err != nil {
 			return err
 		}
 		tflog.Debug(ctx, "executing query: \n\n"+formattedQuery+"\n\n")
 	}
 
-	// Execute the query
 	err := (*client.Connection).Exec(ctx, query)
 	if err != nil {
 		return fmt.Errorf("executing query: %v", err)
 	}
 	return nil
-}
-
-func formatQuery(ctx context.Context, client *Client, query string) (string, error) {
-	escapedQuery := strings.ReplaceAll(query, "'", "''")
-	formatQueryStmt := fmt.Sprintf("SELECT formatQuery('%s')", escapedQuery)
-	row := (*client.Connection).QueryRow(ctx, formatQueryStmt)
-
-	var formattedQueryResult string
-	if err := row.Scan(&formattedQueryResult); err != nil {
-		return "", err
-	}
-	return formattedQueryResult, nil
 }
 
 func createColumnsMap(columns []interface{}) map[string]map[string]interface{} {
@@ -123,28 +111,74 @@ func createColumnsMap(columns []interface{}) map[string]map[string]interface{} {
 
 func handleColumnChanges(ctx context.Context, client *Client, table models.TableResource, clusterStatement string, columnMap map[string]interface{}, oldColumnsMap map[string]map[string]interface{}) error {
 	columnName := columnMap["name"].(string)
-	if _, exists := oldColumnsMap[columnName]; !exists {
-		return executeQuery(ctx, client, fmt.Sprintf(
-			"ALTER TABLE %s.%s %s ADD COLUMN %s %s %s %s %s %s",
-			table.Database, table.Name, clusterStatement, columnMap["name"], columnMap["type"], columnMap["default_kind"],
-			columnMap["default_expression"], columnMap["comment"].(string), columnMap["location"]))
-	} else {
-		oldColumn := oldColumnsMap[columnName]
-		if oldColumn["type"] != columnMap["type"] {
-			return executeQuery(ctx, client, fmt.Sprintf(
-				"ALTER TABLE %s.%s %s MODIFY COLUMN %s %s",
-				table.Database, table.Name, clusterStatement, columnMap["name"], columnMap["type"]))
+	oldColumnMap, exists := oldColumnsMap[columnName]
+
+	if !exists {
+		return addNewColumn(ctx, client, table, clusterStatement, columnMap)
+	}
+
+	generateArgs := func(extraArgs ...interface{}) []interface{} {
+		return append([]interface{}{table.Database, table.Name, clusterStatement, columnName}, extraArgs...)
+	}
+
+	changes := []struct {
+		condition func() bool
+		query     string
+		args      []interface{}
+	}{
+		{
+			condition: columnDiffers(oldColumnMap, columnMap, "type"),
+			query:     "ALTER TABLE %s.%s %s MODIFY COLUMN %s %s",
+			args:      generateArgs(columnMap["type"]),
+		},
+		{
+			condition: columnDiffers(oldColumnMap, columnMap, "comment"),
+			query:     "ALTER TABLE %s.%s %s COMMENT COLUMN %s '%s'",
+			args:      generateArgs(columnMap["comment"]),
+		},
+		{
+			condition: columnDiffers(oldColumnMap, columnMap, "default_kind", "default_expression"),
+			query:     "ALTER TABLE %s.%s %s MODIFY COLUMN %s %s %s",
+			args: generateArgs(
+				columnMap["default_kind"],
+				columnMap["default_expression"],
+			),
+		},
+	}
+
+	for _, change := range changes {
+		if change.condition() {
+			query := fmt.Sprintf(change.query, change.args...)
+			tflog.Debug(ctx, fmt.Sprintf("Executing query: %s", query))
+
+			if err := executeQuery(ctx, client, query); err != nil {
+				return fmt.Errorf("failed to modify column %s: %w", columnName, err)
+			}
 		}
-		if oldColumn["comment"] != columnMap["comment"] {
-			return executeQuery(ctx, client, fmt.Sprintf(
-				"ALTER TABLE %s.%s %s COMMENT COLUMN %s '%s'",
-				table.Database, table.Name, clusterStatement, columnMap["name"], columnMap["comment"]))
+	}
+	return nil
+}
+
+func columnDiffers(oldMap, newMap map[string]interface{}, keys ...string) func() bool {
+	return func() bool {
+		for _, key := range keys {
+			if oldMap[key] != newMap[key] {
+				return true
+			}
 		}
-		if oldColumn["default_kind"] != columnMap["default_kind"] || oldColumn["default_expression"] != columnMap["default_expression"] {
-			return executeQuery(ctx, client, fmt.Sprintf(
-				"ALTER TABLE %s.%s %s MODIFY COLUMN %s %s %s",
-				table.Database, table.Name, clusterStatement, columnMap["name"], columnMap["default_kind"], columnMap["default_expression"]))
-		}
+		return false
+	}
+}
+
+func addNewColumn(ctx context.Context, client *Client, table models.TableResource, clusterStatement string, columnMap map[string]interface{}) error {
+	query := fmt.Sprintf(
+		"ALTER TABLE %s.%s %s ADD COLUMN %s %s %s %s %s %s",
+		table.Database, table.Name, clusterStatement,
+		columnMap["name"], columnMap["type"], columnMap["default_kind"],
+		columnMap["default_expression"], columnMap["comment"].(string), columnMap["location"])
+
+	if err := executeQuery(ctx, client, query); err != nil {
+		return fmt.Errorf("failed to add new column %s: %w", columnMap["name"].(string), err)
 	}
 	return nil
 }

@@ -10,15 +10,14 @@ type Client struct {
 	Connection *driver.Conn
 }
 
-func FormatQuery(ctx context.Context, query string, meta any) string {
-	client := meta.(*Client)
+func (client *Client) FormatQuery(ctx context.Context, query string) (string, error) {
 	conn := client.Connection
 	formatQueryStmt := `SELECT formatQuery($1)`
 	row := (*conn).QueryRow(ctx, formatQueryStmt, query)
 
 	var formattedQueryResult string
 	if err := row.Scan(&formattedQueryResult); err != nil {
-		return ""
+		return "", err
 	}
-	return formattedQueryResult
+	return formattedQueryResult, nil
 }
