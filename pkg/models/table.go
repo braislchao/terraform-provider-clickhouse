@@ -12,6 +12,7 @@ type CHTable struct {
 	Database   string     `ch:"database"`
 	Name       string     `ch:"name"`
 	EngineFull string     `ch:"engine_full"`
+	SortingKey string     `ch:"sorting_key"`
 	Engine     string     `ch:"engine"`
 	Comment    string     `ch:"comment"`
 	Columns    []CHColumn `ch:"columns"`
@@ -103,7 +104,7 @@ func (t *CHTable) ToResource() (*TableResource, error) {
 		EngineFull:   t.EngineFull,
 		Engine:       t.Engine,
 		EngineParams: removeDefaultParams(GetEngineParams(t.EngineFull)),
-		OrderBy:      GetOrderBy(t.EngineFull),
+		OrderBy:      GetOrderBy(t.SortingKey),
 		Columns:      t.ColumnsToResource(),
 		Indexes:      t.IndexesToResource(),
 		Comment:      t.Comment,
@@ -126,22 +127,15 @@ func GetEngineParams(engineFull string) []string {
 	return engineParams
 }
 
-func GetOrderBy(engineFull string) []string {
-	rMultiple := regexp.MustCompile(`ORDER BY\s*\(([^)]+)\)`)
-
-	match := rMultiple.FindStringSubmatch(engineFull)
-	if len(match) == 0 {
-		rSingle := regexp.MustCompile(`ORDER BY\s+([^ ]+)`)
-		match = rSingle.FindStringSubmatch(engineFull)
-	}
-
+func GetOrderBy(sortingKey string) []string {
 	var orderBy []string
-	if len(match) > 1 {
-		values := strings.Split(match[1], ",")
-		for _, value := range values {
-			value = strings.TrimSpace(value)
-			orderBy = append(orderBy, value)
-		}
+	sortingKey = strings.TrimSpace(sortingKey)
+
+	keys := strings.Split(sortingKey, ",")
+
+	for _, key := range keys {
+		key = strings.TrimSpace(key)
+		orderBy = append(orderBy, key)
 	}
 	return orderBy
 }

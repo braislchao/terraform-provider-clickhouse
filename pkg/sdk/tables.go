@@ -53,7 +53,7 @@ func (c *Client) UpdateTable(ctx context.Context, table models.TableResource, re
 }
 
 func (c *Client) GetTable(ctx context.Context, database string, table string) (*models.CHTable, error) {
-	query := fmt.Sprintf("SELECT database, name, engine_full, engine, comment FROM system.tables where database = '%s' and name = '%s'", database, table)
+	query := fmt.Sprintf("SELECT database, name, engine_full, engine, sorting_key, comment FROM system.tables where database = '%s' and name = '%s'", database, table)
 	row := c.Conn.QueryRow(ctx, query)
 
 	if row.Err() != nil {

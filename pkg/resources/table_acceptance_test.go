@@ -34,8 +34,9 @@ func TestAccResourceTable(t *testing.T) {
 					resource.TestCheckResourceAttr("clickhouse_table.table", "engine", "ReplacingMergeTree"),
 					resource.TestCheckResourceAttr("clickhouse_table.table", "engine_params.#", "1"),
 					resource.TestCheckResourceAttr("clickhouse_table.table", "engine_params.0", "eventTime"),
-					resource.TestCheckResourceAttr("clickhouse_table.table", "order_by.#", "1"),
+					resource.TestCheckResourceAttr("clickhouse_table.table", "order_by.#", "2"),
 					resource.TestCheckResourceAttr("clickhouse_table.table", "order_by.0", "key"),
+					resource.TestCheckResourceAttr("clickhouse_table.table", "order_by.1", "toStartOfHour(eventTime)"),
 					resource.TestCheckResourceAttr("clickhouse_table.table", "primary_key.#", "1"),
 					resource.TestCheckResourceAttr("clickhouse_table.table", "primary_key.0", "key"),
 					resource.TestCheckResourceAttr("clickhouse_table.table", "column.#", "3"),
@@ -66,7 +67,7 @@ func tableConfigWithName(database string, tableName string) string {
 		name = "%_tableName_%"
 		engine = "ReplacingMergeTree"
 		engine_params = ["eventTime"]
-		order_by = ["key"]
+		order_by = ["key", "toStartOfHour(eventTime)"]
 		primary_key = ["key"]
 		column  {
 			name= "key"
