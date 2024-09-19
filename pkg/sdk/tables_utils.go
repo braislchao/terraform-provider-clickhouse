@@ -81,7 +81,7 @@ func buildTTLSentence(ttl map[string]string) string {
 	if len(ttl) > 0 {
 		ttlList := make([]string, 0)
 		for key, value := range ttl {
-			ttlList = append(ttlList, fmt.Sprintf("%s TO VOLUME '%s'", key, value))
+			ttlList = append(ttlList, fmt.Sprintf("%s %s", key, value))
 		}
 		ret := fmt.Sprintf("TTL %s", strings.Join(ttlList, ", "))
 		return ret
