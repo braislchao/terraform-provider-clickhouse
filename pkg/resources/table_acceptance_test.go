@@ -47,8 +47,8 @@ func TestAccResourceTable(t *testing.T) {
 					resource.TestCheckResourceAttr("clickhouse_table.table", "column.2.name", "eventTime"),
 					resource.TestCheckResourceAttr("clickhouse_table.table", "column.2.type", "DateTime"),
 					resource.TestCheckResourceAttr("clickhouse_table.table", "ttl.%", "2"),
-					resource.TestCheckResourceAttr("clickhouse_table.table", "ttl.toDateTime(eventTime)", "default"),
-					resource.TestCheckResourceAttr("clickhouse_table.table", "ttl.toDateTime(eventTime) + INTERVAL 4 HOUR", "default"),
+					resource.TestCheckResourceAttr("clickhouse_table.table", "ttl.toDateTime(eventTime)", "DELETE"),
+					resource.TestCheckResourceAttr("clickhouse_table.table", "ttl.toDateTime(eventTime) + INTERVAL 4 HOUR", "DELETE where key > 0"),
 				),
 			},
 		},
@@ -86,8 +86,8 @@ func tableConfigWithName(database string, tableName string) string {
 			partition_function = "toYYYYMM"
 		}
 		ttl = {
-			"toDateTime(eventTime)" = "default"
-			"toDateTime(eventTime) + INTERVAL 4 HOUR" = "default"
+			"toDateTime(eventTime)" = "DELETE"
+			"toDateTime(eventTime) + INTERVAL 4 HOUR" = "DELETE where key > 0"
 		}
 		comment = "This is just a new table"
 }`
