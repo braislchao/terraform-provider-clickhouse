@@ -21,6 +21,16 @@ func (c *Client) UpdateTable(ctx context.Context, table models.TableResource, re
 		}
 	}
 
+	if resourceData.HasChange("ttl") {
+		_, new := resourceData.GetChange("ttl")
+		newTTL := new.(map[string]interface{})
+
+		err := UpdateTTL(ctx, c, table, clusterStatement, newTTL)
+		if err != nil {
+			return err
+		}
+	}
+
 	if resourceData.HasChange("column") {
 		old, new := resourceData.GetChange("column")
 		oldColumns := old.([]interface{})
