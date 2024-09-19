@@ -158,7 +158,6 @@ func ResourceTable() *schema.Resource {
 				Description: "Table TTL",
 				Type:        schema.TypeMap,
 				Optional:    true,
-				ForceNew:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -337,6 +336,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	tableResource.Cluster = d.Get("cluster").(string)
 	tableResource.SetColumns(d.Get("column").([]interface{}))
 	tableResource.Comment = d.Get("comment").(string)
+	tableResource.TTL = common.MapInterfaceToMapOfString(d.Get("ttl").(map[string]interface{}))
 
 	err := c.UpdateTable(ctx, tableResource, d)
 	if err != nil {
