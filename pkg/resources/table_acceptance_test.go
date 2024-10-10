@@ -46,6 +46,9 @@ func TestAccResourceTable(t *testing.T) {
 					resource.TestCheckResourceAttr("clickhouse_table.table", "column.1.type", "String"),
 					resource.TestCheckResourceAttr("clickhouse_table.table", "column.2.name", "eventTime"),
 					resource.TestCheckResourceAttr("clickhouse_table.table", "column.2.type", "DateTime"),
+					resource.TestCheckResourceAttr("clickhouse_table.table", "column.2.default_kind", "DEFAULT"),
+					resource.TestCheckResourceAttr("clickhouse_table.table", "column.2.default_expression", "now()"),
+					resource.TestCheckResourceAttr("clickhouse_table.table", "column.2.compression_codec", "CODEC(DoubleDelta, ZSTD(1))"),
 					resource.TestCheckResourceAttr("clickhouse_table.table", "ttl.%", "2"),
 					resource.TestCheckResourceAttr("clickhouse_table.table", "ttl.toDateTime(eventTime)", "DELETE"),
 					resource.TestCheckResourceAttr("clickhouse_table.table", "ttl.toDateTime(eventTime) + INTERVAL 4 HOUR", "DELETE where key > 0"),
@@ -80,6 +83,9 @@ func tableConfigWithName(database string, tableName string) string {
 		column {
 			name= "eventTime"
 			type= "DateTime"
+			default_kind= "DEFAULT"
+			default_expression= "now()"
+			compression_codec= "CODEC(DoubleDelta, ZSTD(1))"
 		}
 		partition_by {
 			by = "eventTime"

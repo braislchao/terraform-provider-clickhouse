@@ -49,6 +49,7 @@ Required:
 Optional:
 
 - `comment` (String) Column Comment
+- `compression_codec` (String) Column codec compression
 - `default_expression` (String) Column Default Expression
 - `default_kind` (String) Column Default Kind
 

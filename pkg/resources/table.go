@@ -142,6 +142,12 @@ func ResourceTable() *schema.Resource {
 							Optional:    true,
 							Default:     "",
 						},
+						"compression_codec": {
+							Description: "Column codec compression",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+						},
 					},
 				},
 			},
