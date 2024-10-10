@@ -18,6 +18,7 @@ func (c *Client) GetColumnDefintions(columns []models.ColumnDefinition) []map[st
 			"comment":            column.Comment,
 			"default_kind":       column.DefaultKind,
 			"default_expression": column.DefaultExpression,
+			"compression_codec":  column.CompressionCodec,
 		})
 	}
 	return ret
@@ -25,7 +26,7 @@ func (c *Client) GetColumnDefintions(columns []models.ColumnDefinition) []map[st
 
 func (c *Client) getColumns(ctx context.Context, database string, table string) ([]models.CHColumn, error) {
 	query := fmt.Sprintf(
-		"SELECT database, table, name, type, comment, default_kind, default_expression FROM system.columns WHERE database = '%s' AND table = '%s'",
+		"SELECT database, table, name, type, comment, default_kind, default_expression, compression_codec FROM system.columns WHERE database = '%s' AND table = '%s'",
 		database,
 		table,
 	)
@@ -89,8 +90,8 @@ func UpdateColumns(ctx context.Context, c *Client, table models.TableResource, c
 	}{
 		{
 			condition: !exists,
-			query:     "ALTER TABLE %s.%s %s ADD COLUMN %s %s %s %s %s %s",
-			args:      generateArgs(columnMap["type"], columnMap["default_kind"], columnMap["default_expression"], columnMap["comment"].(string), columnMap["location"]),
+			query:     "ALTER TABLE %s.%s %s ADD COLUMN %s %s %s %s %s %s %s",
+			args:      generateArgs(columnMap["type"], columnMap["default_kind"], columnMap["default_expression"], columnMap["compression_codec"], columnMap["comment"].(string), columnMap["location"]),
 		},
 		{
 			condition: exists && columnDiffers(oldColumnMap, columnMap, "type"),
@@ -103,11 +104,12 @@ func UpdateColumns(ctx context.Context, c *Client, table models.TableResource, c
 			args:      generateArgs(columnMap["comment"]),
 		},
 		{
-			condition: exists && columnDiffers(oldColumnMap, columnMap, "default_kind", "default_expression"),
-			query:     "ALTER TABLE %s.%s %s MODIFY COLUMN %s %s %s",
+			condition: exists && columnDiffers(oldColumnMap, columnMap, "default_kind", "default_expression", "compression_codec"),
+			query:     "ALTER TABLE %s.%s %s MODIFY COLUMN %s %s %s %s",
 			args: generateArgs(
 				columnMap["default_kind"],
 				columnMap["default_expression"],
+				columnMap["compression_codec"],
 			),
 		},
 	}

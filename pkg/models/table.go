@@ -34,6 +34,7 @@ type CHColumn struct {
 	Comment           string `ch:"comment"`
 	DefaultKind       string `ch:"default_kind"`
 	DefaultExpression string `ch:"default_expression"`
+	CompressionCodec  string `ch:"compression_codec"`
 }
 
 type TableResource struct {
@@ -66,6 +67,7 @@ type ColumnDefinition struct {
 	Comment           string `json:"comment"`
 	DefaultKind       string `json:"default_kind"`
 	DefaultExpression string `json:"default_expression"`
+	CompressionCodec  string `json:"compression_codec"`
 }
 
 type PartitionByResource struct {
@@ -91,6 +93,7 @@ func (t *CHTable) ColumnsToResource() []ColumnDefinition {
 			Comment:           column.Comment,
 			DefaultKind:       column.DefaultKind,
 			DefaultExpression: column.DefaultExpression,
+			CompressionCodec:  column.CompressionCodec,
 		}
 		columnResources = append(columnResources, columnResource)
 	}
@@ -160,6 +163,7 @@ func (t *TableResource) GetColumnsResourceList() []ColumnDefinition {
 			Comment:           column.Comment,
 			DefaultKind:       column.DefaultKind,
 			DefaultExpression: column.DefaultExpression,
+			CompressionCodec:  column.CompressionCodec,
 		})
 	}
 	return columnResources
@@ -222,6 +226,7 @@ func (t *TableResource) SetColumns(columns []interface{}) {
 			Comment:           column.(map[string]interface{})["comment"].(string),
 			DefaultKind:       column.(map[string]interface{})["default_kind"].(string),
 			DefaultExpression: column.(map[string]interface{})["default_expression"].(string),
+			CompressionCodec:  column.(map[string]interface{})["compression_codec"].(string),
 		}
 		t.Columns = append(t.Columns, columnDefinition)
 	}
