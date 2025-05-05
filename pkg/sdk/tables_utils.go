@@ -91,22 +91,23 @@ func buildTTLSentence(ttl map[string]string) string {
 
 func buildCreateTableOnClusterSentence(resource models.TableResource) (query string) {
 	createStatement := common.GetCreateStatement("table")
+	clusterStatement := common.GetClusterStatement(resource.Cluster)
 
-	columnsStatement := ""
+	// Build columns and indexes
+	columns := []string{}
+
 	if len(resource.Columns) > 0 {
-		columnsStatement = "("
-		columnsList := buildColumnsSentence(resource.GetColumnsResourceList())
-		columnsStatement += strings.Join(columnsList, ",\n")
-		columnsStatement += ",\n"
-
-		if len(resource.Indexes) > 0 {
-			indexesList := buildIndexesSentence(resource.Indexes)
-			columnsStatement += strings.Join(indexesList, ",\n")
-		}
-		columnsStatement += ")\n"
+		columns = append(columns, buildColumnsSentence(resource.GetColumnsResourceList())...)
 	}
 
-	clusterStatement := common.GetClusterStatement(resource.Cluster)
+	if len(resource.Indexes) > 0 {
+		columns = append(columns, buildIndexesSentence(resource.Indexes)...)
+	}
+
+	columnsStatement := ""
+	if len(columns) > 0 {
+		columnsStatement = fmt.Sprintf("(\n%s\n)", strings.Join(columns, ",\n"))
+	}
 
 	ret := fmt.Sprintf(
 		"%s %v.%v %v %v ENGINE = %v(%v) %s %s %s %s %s COMMENT '%s'",
@@ -124,5 +125,7 @@ func buildCreateTableOnClusterSentence(resource models.TableResource) (query str
 		buildSettingsSentence(resource.Settings),
 		resource.Comment,
 	)
+
 	return ret
 }
+
